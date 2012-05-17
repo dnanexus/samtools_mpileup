@@ -114,8 +114,6 @@ def makeBcftoolsParameters(job):
         job['input']['perform_max_likelihood_inference'] = True
     if job['input']['perform_max_likelihood_inference']:
         options += 'e'
-    if job['input']['retain_unlikely_alleles']:
-        options += 'A'
     
     options += ' -i ' + str(job['input']['indel_to_snp_ratio'])
     options += ' -p ' + str(job['input']['variant_probability'])
@@ -235,13 +233,13 @@ def parseVcf(vcfFile, simpleVar, compressNoCall, compressReference, storeFullVcf
                 chr = tabSplit[0]
                 lo = int(tabSplit[1])
                 hi = lo + len(tabSplit[3])
-                ref = tabSplit[3].replace(".","").upper()
+                ref = tabSplit[3]
                 
                 #In VCF format, the ALT column holds possible candidate alleles. The actual call as to the
                 #   variant and its zygosity is a combination of ALT and the genotype specified in the info field.
                 #   We store all of the options (including ref) and calculated the actual calls later
-                altOptions = [ref]
-                altOptions.extend(tabSplit[4].split(","))
+                altOptions = [ref.upper()]
+                altOptions.extend(tabSplit[4].upper().split(","))
                 qual = tabSplit[5]
                 type = "Unknown"
                 if qual == ".":
@@ -278,20 +276,6 @@ def parseVcf(vcfFile, simpleVar, compressNoCall, compressReference, storeFullVcf
                                 vcfSpecificData += x+"\t"
                             entry.append(vcfSpecificData.strip())
                 else:
-                    #In VCF format, the prior character to a sequence change is given in some cases (Ins, Del)
-                    #   we are removing this in our format, and so need to figure out which characters to filter   
-                    overlap = findMatchingSequence(ref, altOptions, False)
-                    ref = ref[overlap:]
-                    for i in range(len(altOptions)):
-                        altOptions[i] = altOptions[i][overlap:]
-                    reverseOverlap = findMatchingSequence(ref, altOptions, True)
-
-                    ref = ref[:len(ref)-reverseOverlap]
-                    for i in range(len(altOptions)):
-                        altOptions[i] = altOptions[i][:len(altOptions[i])-reverseOverlap]
-                    
-                    
-                    
                     #Find all of the genotypes 
                     genotypePossibilities = {}
                     for x in tabSplit[9:]:
@@ -305,102 +289,90 @@ def parseVcf(vcfFile, simpleVar, compressNoCall, compressReference, storeFullVcf
                         else:
                             genotypeQuality = 0
                     genotypePossibilities = sorted(genotypePossibilities.iteritems(), key=operator.itemgetter(1), reverse=True)
-                    if len(genotypePossibilities) > 0:
-                        genotype = genotypePossibilities[0][0]
-                        genotypeQuality = genotypePossibilities[0][1]
-                        if len(genotypePossibilities) > 1:
-                            genotypeQuality -= genotypePossibilities[1][1]
-                        alt = ""
-                        if genotype == "0/0" or genotype == "0|0" or genotype == False:
-                            if(len(genotypePossibilities) > 1):
-                                genotype = genotypePossibilities[1][0]
-                                genotypeQuality = 0
-                                
-                        genotypeSplit = re.split("[\|\/]", genotype)
-                        for i in range(len(genotypeSplit)):
+                    if len(genotypePossibilities[0) == 0:
+                        print input
+                    genotype = genotypePossibilities[0][0]
+                    genotypeQuality = genotypePossibilities[0][1]
+                    if len(genotypePossibilities) > 1:
+                        genotypeQuality -= genotypePossibilities[1][1]
+                    alt = ""
+                    if genotype == "0/0" or genotype == "0|0" or genotype == False:
+                        if(len(genotypePossibilities) > 1):
+                            genotype = genotypePossibilities[1][0]
+                            genotypeQuality = 0
                             
-                        #This is done to ensure the convention of placing the ref allele first
-                        #   in practice, it seems that all VCFs already place the ref first
-                            genotypeSplit[i] = int(genotypeSplit[i])
-                        genotypeSplit.sort()
-    
+                    genotypeSplit = re.split("[\|\/]", genotype)
+                    for i in range(len(genotypeSplit)):
                         
-                        alleles = []
-                        for x in genotypeSplit:
-                            if len(alt) > 0:
-                                alt += "/"
-                            alt += altOptions[x]
-                            if x != 0:
-                                alleles.append(altOptions[x])
-                            if len(altOptions[x]) == 0:
-                                alt += "-"
-                    else:
-                        alt = "?"
-                        for x in altOptions:
-                            alt += "/"+x
-                        genotypeQuality = 0
-                        
-                    typeList = []                
-                    #These rules determine how to characterize the type of change that has occurred
-                    for x in alleles:
-                        if len(x) == len(ref) and len(ref) == 1:
-                            type = "SNP"
-                        elif ref in x:
-                            type = "Ins"
-                        elif x in ref:
-                            type = "Del"
-                        else:
-                            type = "Complex"
-                        for x in typeList[1::]:
-                            if typeList[0] != x:
-                                type = "Mixed"
+                    #This is done to ensure the convention of placing the ref allele first
+                    #   in practice, it seems that all VCFs already place the ref first
+                        genotypeSplit[i] = int(genotypeSplit[i])
+                    genotypeSplit.sort()
 
-                    hi = lo+len(ref)-1
+                    #In VCF format, the prior character to a sequence change is given in some cases (Ins, Del)
+                    #   we are removing this in our format, and so need to figure out which characters to filter   
+                    overlap = findMatchingSequence(ref, altOptions)
+
+                    for x in genotypeSplit:
+                        if len(alt) > 0:
+                            alt += "/"
+                        alt += altOptions[x][overlap:]
+                        if len(altOptions[x][overlap:]) == 0:
+                            alt += "-"
+                        typeList = []                
+                        #These rules determine how to characterize the type of change that has occurred
+                        for x in altOptions:
+                            if len(x) == len(ref) and len(ref) == 1:
+                                type = "SNP"
+                            elif ref in x:
+                                type = "Ins"
+                            elif x in ref:
+                                type = "Del"
+                            else:
+                                type = "Complex"
+                            for x in typeList[1::]:
+                                if typeList[0] != x:
+                                    type = "Mixed"
+                        
+                    ref = ref[overlap:]
                     if len(ref) == 0:
                         ref = "-"
-                    entry = [chr, lo+overlap-1, hi, type, ref.upper(), alt.upper(), qual, coverage, int(genotypeQuality)]
+                    entry = [chr, lo-overlap, lo+len(ref), type, ref, alt, qual, coverage, int(genotypeQuality)]
                     if storeFullVcf:
                         entry.append(tabSplit[4])
                         vcfSpecificData = ''
                         for x in tabSplit[7:]:
                             vcfSpecificData += x+"\t"
                         entry.append(vcfSpecificData.strip())
-                    if type == "Ins":
-                        print "Ins"
-                        print entry
-                        print input
                     #print entry
                     simpleVar.add_rows([entry])
                 if compressReference:
                     if priorType == "Ref" and type != priorType:
-                        entry = [chr, priorPosition, lo, type, "", "", 0, 0, 0]
+                        entry = [chr, priorPosition, hi, type, "", "", 0, 0, 0]
                         if storeFullVcf:
                             entry.extend([".", ""])
                         simpleVar.add_rows([entry])                        
                 if compressNoCall:
                     if priorType == "No-call" and type != priorType:
-                        entry = [chr, priorPosition, lo, type, "", "", 0, 0, 0]
+                        entry = [chr, priorPosition, hi, type, "", "", 0, 0, 0]
                         if storeFullVcf:
                             entry.extend([".",""])
                         simpleVar.add_rows([entry])
                 if type != priorType:
                     priorType = type
-                    priorPosition = lo-1
+                    priorPosition = lo  
         except StopIteration:
             break
 
-def findMatchingSequence(ref, altOptions, reverse):
-    r = 1
-    if reverse == True:
-        r = -1
+def findMatchingSequence(ref, altOptions):
     position = 0
     minLength = len(ref)
     for x in altOptions:
-        if len(x[::r]) < minLength:
-            minLength = len(x[::r])
+        if len(x) < minLength:
+            minLength = len(x)
     for i in range(minLength):
         for x in altOptions:
-            if ref[::r][i] != x[::r][i]:
+            if ref[i] != x[i]:
                 return i
     return minLength
 
@@ -479,3 +451,12 @@ def checkIntervalRange(includeList, chromosome, lo, hi):
                 command += " -l %s:%d-%d" % (chromosome, min, max)
     return command
 
+    
+    
+    
+    
+    
+    
+    
+    
+    

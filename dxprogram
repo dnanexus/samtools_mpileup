@@ -14,10 +14,12 @@
     {"name": "minimum_base_quality", "class":"int", "default":13},
     
     {"name": "bayesian_inference", "class":"boolean", "default":true},
+    {"name": "perform_max_likelihood_inference", "class":"boolean", "default":false},
     {"name": "indel_to_snp_ratio", "class":"float", "default":0.15},
     {"name": "variant_probability", "class":"float", "default":0.5},
     {"name": "scaled_mutation_rate", "class":"float", "default":0.001},
-    {"name": "output_variants_only", "class":"boolean", "default":false},
+    {"name": "output_variants_only", "class":"boolean", "default":true},
+    {"name": "retain_unlikely_alleles", "class":"boolean", "default":false},
     
     {"name": "compress_reference", "class": "boolean", "default": false},
     {"name": "compress_no_call", "class": "boolean", "default": false},
