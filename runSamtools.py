@@ -235,7 +235,7 @@ def parseVcf(vcfFile, simpleVar, compressNoCall, compressReference, storeFullVcf
                 chr = tabSplit[0]
                 lo = int(tabSplit[1])
                 hi = lo + len(tabSplit[3])
-                ref = tabSplit[3].replace(".","").upper()
+                ref = tabSplit[3].replace(".","")
                 
                 #In VCF format, the ALT column holds possible candidate alleles. The actual call as to the
                 #   variant and its zygosity is a combination of ALT and the genotype specified in the info field.
@@ -365,7 +365,7 @@ def parseVcf(vcfFile, simpleVar, compressNoCall, compressReference, storeFullVcf
                         for x in tabSplit[7:]:
                             vcfSpecificData += x+"\t"
                         entry.append(vcfSpecificData.strip())
-                    if type == "Ins":
+                    if type == "Ins" or type == "Complex":
                         print "Ins"
                         print entry
                         print input
