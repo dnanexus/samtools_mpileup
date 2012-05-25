@@ -44,7 +44,7 @@ def main():
     simpleVar = dxpy.new_dxgtable(mappings_schema, indices=[dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')])
     tableId = simpleVar.get_id()
     simpleVar = dxpy.open_dxgtable(tableId)
-    
+    simpleVar.set_details({'original_contigset':originalContigSet})
     
     reduceInput = {}
     commandList = splitGenomeLength(originalContigSet, job['input']['intervals_to_process'], job['input']['intervals_to_exclude'],  job['input']['minimum_chunk_size'], job['input']['maximum_chunks'])
