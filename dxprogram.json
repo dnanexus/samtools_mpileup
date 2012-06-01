@@ -1,6 +1,7 @@
 {
-  "name": "Samtools Mpileup",
-  "subtitle": "Variant calling for SNPs and Indels using Samtools Mpileup",
+  "name": "samtools_mpileup",
+  "title": "Samtools Mpileup",
+  "summary": "Variant calling for SNPs and Indels using Samtools Mpileup",
   "dxapi": "1.03rc",
   "version": "0.1",
   "inputs": [
