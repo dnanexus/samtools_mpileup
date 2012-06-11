@@ -33,7 +33,7 @@
     {"name": "intervals_to_exclude", "class":"string", "default":""}
   ],
   "outputs": [
-    {"name": "simplevar", "class": "gtable"}
+    {"name": "simplevar", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
   ],
   "run": 
     {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]}

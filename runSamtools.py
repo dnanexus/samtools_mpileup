@@ -45,6 +45,7 @@ def main():
     tableId = simpleVar.get_id()
     simpleVar = dxpy.open_dxgtable(tableId)
     simpleVar.set_details({'original_contigset':originalContigSet})
+    simpleVar.add_types(["SimpleVar", "gri"])
     
     reduceInput = {}
     commandList = splitGenomeLength(originalContigSet, job['input']['intervals_to_process'], job['input']['intervals_to_exclude'],  job['input']['minimum_chunk_size'], job['input']['maximum_chunks'])
