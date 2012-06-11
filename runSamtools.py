@@ -19,15 +19,15 @@ def main():
     except:
         raise Exception("The original reference genome must be attached as a detail")
     
-    subprocess.check_call("contigset2fasta %s ref.fa" % (contigSetId), shell=True)
-    reference_sequence = dxpy.dxlink(dxpy.upload_local_file("ref.fa"))
+    #subprocess.check_call("contigset2fasta %s ref.fa" % (contigSetId), shell=True)
+    #reference_sequence = dxpy.dxlink(dxpy.upload_local_file("ref.fa"))
 
-    print "Indexing Dictionary"
-    subprocess.check_call("samtools faidx ref.fa", shell=True)
+    #print "Indexing Dictionary"
+    #subprocess.check_call("samtools faidx ref.fa", shell=True)
     
-    referenceIndex = dxpy.dxlink(dxpy.upload_local_file("ref.fa.fai"))
+    #referenceIndex = dxpy.dxlink(dxpy.upload_local_file("ref.fa.fai"))
 
-    mappings_schema = [
+    variants_schema = [
             {"name": "chr", "type": "string"}, 
             {"name": "lo", "type": "int32"},
             {"name": "hi", "type": "int32"},
@@ -39,9 +39,9 @@ def main():
             {"name": "genotypeQuality", "type": "int32"},    
         ]
     if job['input']['store_full_vcf']:
-        mappings_schema.extend([{"name": "vcf_alt", "type": "string"}, {"name": "vcf_additional_data", "type": "string"}])
+        variants_schema.extend([{"name": "vcf_alt", "type": "string"}, {"name": "vcf_additional_data", "type": "string"}])
     
-    simpleVar = dxpy.new_dxgtable(mappings_schema, indices=[dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')])
+    simpleVar = dxpy.new_dxgtable(variants_schema, indices=[dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')])
     tableId = simpleVar.get_id()
     simpleVar = dxpy.open_dxgtable(tableId)
     simpleVar.set_details({'original_contigset':originalContigSet})
@@ -59,8 +59,6 @@ def main():
         if len(commandList[i]) > 0:
             mapInput = {
                 'mappings_table_id':mappingsTableId,
-                'reference_sequence': reference_sequence,
-                'reference_index': referenceIndex,
                 'original_contig_set': contigSetId,
                 'interval': commandList[i],
                 'tableId': tableId,
@@ -123,18 +121,26 @@ def makeBcftoolsParameters(job):
 
 def mapPileup():
     
+    print "Downloading Reference Genome"
+    subprocess.check_call("contigset2fasta %s ref.fa" % (job['input']['original_contig_set']), shell=True)
+    subprocess.check_call("dx_writeReferenceIndex --contig_set %s --writeSamtoolsIndex ref.fa.fai" % (job['input']['original_contig_set']), shell=True)
+    
     print "Converting Table to SAM"
     print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 %s" % (job['input']['mappings_table_id'], job['input']['interval'])
     subprocess.check_call("dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 %s" % (job['input']['mappings_table_id'], job['input']['interval']), shell=True)
     print "Converting to BAM"
     subprocess.check_call("samtools view -bS input.sam > input.bam", shell=True)
-    print "Sorting"
-    subprocess.check_call("samtools sort input.bam input.sorted", shell=True)
+    #print "Sorting"
+    #subprocess.check_call("samtools sort input.bam input.sorted", shell=True)
     print "Indexing"
-    subprocess.check_call("samtools index input.sorted.bam", shell=True)
+    subprocess.check_call("samtools index input.bam", shell=True)
     
-    referenceFileName = dxpy.download_dxfile(job['input']['reference_sequence'], "ref.fa")
-    indexFileName = dxpy.download_dxfile(job['input']['reference_index'], "ref.fa.fai")
+    
+    
+    
+    
+    #referenceFileName = dxpy.download_dxfile(job['input']['reference_sequence'], "ref.fa")
+    #indexFileName = dxpy.download_dxfile(job['input']['reference_index'], "ref.fa.fai")
     
     simpleVar = dxpy.open_dxgtable(job['input']['tableId'])
     
@@ -152,7 +158,7 @@ def mapPileup():
         bedFile.close()
         command += " -l regions.bed"
     command += job['input']['sam_options']
-    command += " input.sorted.bam | bcftools view "
+    command += " input.bam | bcftools view "
     command += job['input']['bcf_options']
     command += " - > output.vcf"
     print command

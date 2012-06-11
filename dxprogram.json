@@ -1,8 +1,10 @@
 {
-  "name": "Samtools Mpileup",
-  "subtitle": "Variant calling for SNPs and Indels using Samtools Mpileup",
+  "name": "samtools_mpileup",
+  "title": "Samtools Pileup",
+  "summary": "Variant calling for SNPs and Indels using Samtools Pileup",
+  "description": "Samtools pileup takes a set of mapped reads and calls SNP and indels variations from a reference genome, using the mpileup option of samtools.",
   "dxapi": "1.03rc",
-  "version": "0.1",
+  "version": "0.0.1",
   "inputs": [
     {"name": "mappings", "class": "gtable"},
     
