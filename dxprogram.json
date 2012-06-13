@@ -8,6 +8,7 @@
   "inputs": [
     {"name": "mappings", "class": "gtable", "type":"LetterMappings"},
     {"name": "reference", "class": "record", "type": "ContigSet"},
+    {"name": "output name", "class":"string", "optional":true},
     
     {"name": "disable_probabilistic_realignment", "class":"boolean", "default":false},
     {"name": "excessive_mismatch_penalty", "class":"int", "default":50},

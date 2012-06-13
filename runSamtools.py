@@ -56,7 +56,7 @@ def main():
     
     
     for i in range(len(commandList)):
-        print commandList[i]
+        #print commandList[i]
         if len(commandList[i]) > 0:
             mapInput = {
                 'mappings_table_id':mappingsTableId,
@@ -156,14 +156,14 @@ def mapPileup():
     if len(intervalMatch) > 0:
         for x in intervalMatch:
             bedFile.write(x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n")
-            print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
+            #print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
         bedFile.close()
         command += " -l regions.bed"
     command += job['input']['sam_options']
     command += " input.bam | bcftools view "
     command += job['input']['bcf_options']
     command += " - > output.vcf"
-    print command
+    #print command
     subprocess.call(command, shell=True)
     
 
@@ -176,7 +176,7 @@ def mapPileup():
         command += " --store_full_vcf"
     if job['input']['part_number'] == 0:
         command += " --extract_header"
-    print command    
+    #print command    
     subprocess.call(command ,shell=True)
     
 
@@ -245,7 +245,7 @@ def splitGenomeLength(contig_set, includeInterval, excludeInterval, chunkSize, s
     
     while chromosome < len(names):
         if position + chunkSize >= sizes[chromosome]:
-            print chromosome
+            #print chromosome
             commandList[currentChunk] += checkIntervalRange(includeDictionary, names[chromosome], position+1, sizes[chromosome])
             chromosome += 1
             position = 0
@@ -263,8 +263,8 @@ def checkIntervalRange(includeList, chromosome, lo, hi):
         return " -l %s:%d-%d" % (chromosome, lo, hi)
     if includeList.get(chromosome) != None:
         for x in includeList[chromosome]:
-            print "List"
-            print x
+            #print "List"
+            #print x
             min = lo
             max = hi
             if (lo >= x[0] and lo <= x[1]) or (hi <= x[1] and hi >= x[0]):
