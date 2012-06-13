@@ -129,6 +129,7 @@ def mapPileup():
     print "Converting Table to SAM"
     print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 %s" % (job['input']['mappings_table_id'], job['input']['interval'])
     subprocess.check_call("dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 %s" % (job['input']['mappings_table_id'], job['input']['interval']), shell=True)
+    
     print "Converting to BAM"
     subprocess.check_call("samtools view -bS input.sam > input.bam", shell=True)
     #print "Sorting"
