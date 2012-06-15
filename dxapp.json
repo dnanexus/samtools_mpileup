@@ -1,5 +1,7 @@
 {
-  "categories": ["Variation calling"],
-  "globalWorkspace": [],
-  "version":"0.0.7"
+    "globalWorkspace": [], 
+    "version": "0.0.8", 
+    "categories": [
+        "Variation calling"
+    ]
 }

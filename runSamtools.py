@@ -48,8 +48,8 @@ def main():
     simpleVar.add_types(["SimpleVar", "gri"])
     
     reduceInput = {}
-    commandList = splitGenomeLength(originalContigSet, job['input']['intervals_to_process'], job['input']['intervals_to_exclude'],  job['input']['minimum_chunk_size'], job['input']['maximum_chunks'])
-    
+    #commandList = splitGenomeLengthLargePieces(originalContigSet, job['input']['intervals_to_process'], job['input']['intervals_to_exclude'],  job['input']['minimum_chunk_size'], job['input']['maximum_chunks'])
+    commandList = splitGenomeLengthLargePieces(originalContigSet, job['input']['maximum_chunks'])
     samOptions = makeSamtoolsParameters(job)
     bcfOptions = makeBcftoolsParameters(job)
     
@@ -126,45 +126,50 @@ def mapPileup():
     subprocess.check_call("contigset2fasta %s ref.fa" % (job['input']['original_contig_set']), shell=True)
     subprocess.check_call("dx_writeReferenceIndex --contig_set %s --writeSamtoolsIndex ref.fa.fai" % (job['input']['original_contig_set']), shell=True)
     
+    regionFile = open("regions.txt", 'w')
+    regionFile.write(job['input']['interval'])
+    print job['input']['interval']
+    regionFile.close()
+    
+    
     print "Converting Table to SAM"
-    print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 %s" % (job['input']['mappings_table_id'], job['input']['interval'])
-    subprocess.check_call("dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 %s" % (job['input']['mappings_table_id'], job['input']['interval']), shell=True)
-    
-    print "Converting to BAM"
-    subprocess.check_call("samtools view -bS input.sam > input.bam", shell=True)
-    #print "Sorting"
-    #subprocess.check_call("samtools sort input.bam input.sorted", shell=True)
-    print "Indexing"
-    subprocess.check_call("samtools index input.bam", shell=True)
+    print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id'])
+    subprocess.check_call("dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id']), shell=True)
     
     
-    
-    
-    
-    #referenceFileName = dxpy.download_dxfile(job['input']['reference_sequence'], "ref.fa")
-    #indexFileName = dxpy.download_dxfile(job['input']['reference_index'], "ref.fa.fai")
-    
-    simpleVar = dxpy.open_dxgtable(job['input']['tableId'])
-    
-    #command = job['input']['command'] + job['input']['interval']
-    #print command
-    
-    command = "samtools mpileup -uf ref.fa"
-    #command += job['input']['interval']
-    bedFile = open("regions.bed", 'w')
-    intervalMatch = re.findall("(\w+):(\d+)-(\d+)", job['input']['interval'])
-    if len(intervalMatch) > 0:
-        for x in intervalMatch:
-            bedFile.write(x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n")
-            #print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
-        bedFile.close()
-        command += " -l regions.bed"
-    command += job['input']['sam_options']
-    command += " input.bam | bcftools view "
-    command += job['input']['bcf_options']
-    command += " - > output.vcf"
-    #print command
-    subprocess.call(command, shell=True)
+    if checkSamContainsRead("input.sam"):        
+        
+        print "Converting to BAM"
+        subprocess.check_call("samtools view -bS input.sam > input.bam", shell=True)
+        #print "Sorting"
+        #subprocess.check_call("samtools sort input.bam input.sorted", shell=True)
+        print "Indexing"
+        subprocess.check_call("samtools index input.bam", shell=True)
+        
+        #referenceFileName = dxpy.download_dxfile(job['input']['reference_sequence'], "ref.fa")
+        #indexFileName = dxpy.download_dxfile(job['input']['reference_index'], "ref.fa.fai")
+        
+        simpleVar = dxpy.open_dxgtable(job['input']['tableId'])
+        
+        #command = job['input']['command'] + job['input']['interval']
+        #print command
+        
+        command = "samtools mpileup -uf ref.fa"
+        #command += job['input']['interval']
+        bedFile = open("regions.bed", 'w')
+        intervalMatch = re.findall("(\w+):(\d+)-(\d+)", job['input']['interval'])
+        if len(intervalMatch) > 0:
+            for x in intervalMatch:
+                bedFile.write(x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n")
+                #print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
+            bedFile.close()
+            command += " -l regions.bed"
+        command += job['input']['sam_options']
+        command += " input.bam | bcftools view "
+        command += job['input']['bcf_options']
+        command += " - > output.vcf"
+        #print command
+        subprocess.call(command, shell=True)
     
 
     command = "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf" % (job['input']['tableId'])
@@ -260,11 +265,9 @@ def checkIntervalRange(includeList, chromosome, lo, hi):
     included = False
     command = ''
     if len(includeList) == 0:
-        return " -l %s:%d-%d" % (chromosome, lo, hi)
+        return " -L %s:%d-%d" % (chromosome, lo, hi)
     if includeList.get(chromosome) != None:
         for x in includeList[chromosome]:
-            #print "List"
-            #print x
             min = lo
             max = hi
             if (lo >= x[0] and lo <= x[1]) or (hi <= x[1] and hi >= x[0]):
@@ -276,6 +279,49 @@ def checkIntervalRange(includeList, chromosome, lo, hi):
                     max = hi
                 elif hi >= x[1]:
                     max = x[1]
-                command += " -l %s:%d-%d" % (chromosome, min, max)
+                command += " -L %s:%d-%d" % (chromosome, min, max)
     return command
+
+
+
+def splitGenomeLengthLargePieces(contig_set, chunks):
+    details = dxpy.DXRecord(contig_set).get_details()
+    sizes = details['contigs']['sizes']
+    names = details['contigs']['names']
+    offsets = details['contigs']['offsets']
+    
+    for i in range(len(names)):
+        print names[i]+":"+str(sizes[i])
+
+
+    commandList = []
+    for i in range(chunks):
+        commandList.append('')
+    position = 0
+    chromosome = 0
+    chunkSize = sum(sizes)/chunks
+    currentChunk = 0
+    currentLength = 0
+    
+    while chromosome < len(names):
+        if position + (chunkSize - currentLength) >= sizes[chromosome]:
+            commandList[currentChunk] += checkIntervalRange({}, names[chromosome], position+1, sizes[chromosome])
+            currentLength += sizes[chromosome] - position
+            chromosome += 1
+            position = 0
+        else:
+            commandList[currentChunk] += checkIntervalRange({}, names[chromosome], position+1, position+(chunkSize-currentLength)+1)
+            position += (chunkSize-currentLength) + 1
+            if currentChunk < chunks-1:
+                currentChunk += 1
+            currentLength = 0
+    return commandList
+
+
+def checkSamContainsRead(samFileName):
+    for line in open(samFileName, 'r'):
+        if line[0] != "@":
+            return True
+    return False
+
 
