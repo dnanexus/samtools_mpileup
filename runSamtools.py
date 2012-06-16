@@ -124,13 +124,15 @@ def mapPileup():
     
     print "Downloading Reference Genome"
     subprocess.check_call("contigset2fasta %s ref.fa" % (job['input']['original_contig_set']), shell=True)
-    subprocess.check_call("dx_writeReferenceIndex --contig_set %s --writeSamtoolsIndex ref.fa.fai" % (job['input']['original_contig_set']), shell=True)
+    #subprocess.check_call("dx_writeReferenceIndex --contig_set %s --writeSamtoolsIndex ref.fa.fai" % (job['input']['original_contig_set']), shell=True)
     
     regionFile = open("regions.txt", 'w')
     regionFile.write(job['input']['interval'])
     print job['input']['interval']
     regionFile.close()
-    
+
+    print "Indexing Dictionary"
+    subprocess.check_call("samtools faidx ref.fa", shell=True)
     
     print "Converting Table to SAM"
     print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id'])
@@ -146,8 +148,7 @@ def mapPileup():
         print "Indexing"
         subprocess.check_call("samtools index input.bam", shell=True)
         
-        #referenceFileName = dxpy.download_dxfile(job['input']['reference_sequence'], "ref.fa")
-        #indexFileName = dxpy.download_dxfile(job['input']['reference_index'], "ref.fa.fai")
+        
         
         simpleVar = dxpy.open_dxgtable(job['input']['tableId'])
         
