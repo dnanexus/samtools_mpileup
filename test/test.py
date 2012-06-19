@@ -96,7 +96,11 @@ class TestMyApp(unittest.TestCase):
             mappings = {"$dnanexus_link":mappingsId}
             print mappings
         print {'mappings':mappings}
-        job = self.program.run({'mappings':mappings, 'reference':{"$dnanexus_link":"record-9ykz7KQ00006B3PXk1b00005"}})
+        #job = self.program.run({'mappings':mappings, 'reference':{"$dnanexus_link":"record-9ykz7KQ00006B3PXk1b00005"}})
+        
+        job = self.program.run({'mappings':mappings, 'reference':{"$dnanexus_link":"record-9zPp07j000035P6yJ9kQ0006"}})
+        
+        
         
         job.wait_on_done()
         print "Mpileup output:"
