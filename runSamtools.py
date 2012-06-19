@@ -159,31 +159,41 @@ def mapPileup():
         #command += job['input']['interval']
         bedFile = open("regions.bed", 'w')
         intervalMatch = re.findall("(\w+):(\d+)-(\d+)", job['input']['interval'])
+        print "bedFile"
+        print job['input']['interval']
         if len(intervalMatch) > 0:
             for x in intervalMatch:
                 bedFile.write(x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n")
+                print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
                 #print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
             bedFile.close()
-            command += " -l regions.bed"
+            bedFile = open("regions.bed", 'r')
+            print "full File"
+            print bedFile.read()
+            bedFile.close()
+            command += " -l regions.bed "
         command += job['input']['sam_options']
         command += " input.bam | bcftools view "
         command += job['input']['bcf_options']
         command += " - > output.vcf"
-        #print command
+        print command
         subprocess.call(command, shell=True)
     
+        vcfFile = open("output.vcf", 'r')
+        print vcfFile.read()
+        vcfFile.close()
 
-    command = "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf" % (job['input']['tableId'])
-    if job['input']['compress_reference']:
-        command += " --compress_reference"
-    if job['input']['compress_no_call']:
-        command += " --compress_no_call"
-    if job['input']['store_full_vcf']:
-        command += " --store_full_vcf"
-    if job['input']['part_number'] == 0:
-        command += " --extract_header"
-    #print command    
-    subprocess.call(command ,shell=True)
+        command = "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf" % (job['input']['tableId'])
+        if job['input']['compress_reference']:
+            command += " --compress_reference"
+        if job['input']['compress_no_call']:
+            command += " --compress_no_call"
+        if job['input']['store_full_vcf']:
+            command += " --store_full_vcf"
+        if job['input']['part_number'] == 0:
+            command += " --extract_header"
+        #print command    
+        subprocess.call(command ,shell=True)
     
 
 
@@ -282,8 +292,6 @@ def checkIntervalRange(includeList, chromosome, lo, hi):
                     max = x[1]
                 command += " -L %s:%d-%d" % (chromosome, min, max)
     return command
-
-
 
 def splitGenomeLengthLargePieces(contig_set, chunks):
     details = dxpy.DXRecord(contig_set).get_details()
