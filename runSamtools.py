@@ -178,10 +178,6 @@ def mapPileup():
         command += " - > output.vcf"
         print command
         subprocess.call(command, shell=True)
-    
-        vcfFile = open("output.vcf", 'r')
-        print vcfFile.read()
-        vcfFile.close()
 
         command = "dx_vcfToSimplevar2 --table_id %s --vcf_file output.vcf" % (job['input']['tableId'])
         if job['input']['compress_reference']:
