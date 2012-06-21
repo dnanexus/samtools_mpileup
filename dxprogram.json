@@ -6,37 +6,37 @@
   "dxapi": "1.03rc",
   "version": "0.0.1",
   "inputs": [
-    {"name": "mappings", "class": "gtable", "type":"LetterMappings"},
+    {"name": "mappings", "class": "gtable", "type": "LetterMappings"},
     {"name": "reference", "class": "record", "type": "ContigSet"},
-    {"name": "output name", "class":"string", "optional":true},
-    
-    {"name": "disable_probabilistic_realignment", "class":"boolean", "default":false},
-    {"name": "excessive_mismatch_penalty", "class":"int", "default":50},
-    {"name": "max_reads_per_position", "class":"int", "default":250},
-    {"name": "extended_baq_computation", "class":"boolean", "default":false},
-    {"name": "minimum_mapping_quality", "class":"int", "default":0},
-    {"name": "minimum_base_quality", "class":"int", "default":13},
-    
-    {"name": "bayesian_inference", "class":"boolean", "default":true},
-    {"name": "perform_max_likelihood_inference", "class":"boolean", "default":false},
-    {"name": "indel_to_snp_ratio", "class":"float", "default":0.15},
-    {"name": "variant_probability", "class":"float", "default":0.5},
-    {"name": "scaled_mutation_rate", "class":"float", "default":0.001},
-    {"name": "output_variants_only", "class":"boolean", "default":true},
-    {"name": "retain_unlikely_alleles", "class":"boolean", "default":false},
-    
+    {"name": "output name", "class": "string", "optional": true},
+
+    {"name": "disable_probabilistic_realignment", "class": "boolean", "default": false},
+    {"name": "excessive_mismatch_penalty", "class": "int", "default": 50},
+    {"name": "max_reads_per_position", "class": "int", "default": 250},
+    {"name": "extended_baq_computation", "class": "boolean", "default": false},
+    {"name": "minimum_mapping_quality", "class": "int", "default": 0},
+    {"name": "minimum_base_quality", "class": "int", "default": 13},
+
+    {"name": "bayesian_inference", "class": "boolean", "default": true},
+    {"name": "perform_max_likelihood_inference", "class": "boolean", "default": false},
+    {"name": "indel_to_snp_ratio", "class": "float", "default": 0.15},
+    {"name": "variant_probability", "class": "float", "default": 0.5},
+    {"name": "scaled_mutation_rate", "class": "float", "default": 0.001},
+    {"name": "output_variants_only", "class": "boolean", "default": true},
+    {"name": "retain_unlikely_alleles", "class": "boolean", "default": false},
+
     {"name": "compress_reference", "class": "boolean", "default": false},
     {"name": "compress_no_call", "class": "boolean", "default": false},
     {"name": "store_full_vcf", "class": "boolean", "default": true},
-    
-    {"name": "minimum_chunk_size", "class": "int", "default":100000},
-    {"name": "maximum_chunks", "class": "int", "default":5},
-    {"name": "intervals_to_process", "class":"string", "default":""},
-    {"name": "intervals_to_exclude", "class":"string", "default":""}
+
+    {"name": "minimum_chunk_size", "class": "int", "default": 100000},
+    {"name": "maximum_chunks", "class": "int", "default": 5},
+    {"name": "intervals_to_process", "class": "string", "default": ""},
+    {"name": "intervals_to_exclude", "class": "string", "default": ""}
   ],
   "outputs": [
     {"name": "simplevar", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
   ],
-  "run": 
+  "run":
     {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]}
 }
