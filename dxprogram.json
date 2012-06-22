@@ -26,7 +26,7 @@
     {"name": "retain_unlikely_alleles", "class": "boolean", "default": false},
 
     {"name": "compress_reference", "class": "boolean", "default": false},
-    {"name": "compress_no_call", "class": "boolean", "default": false},
+    {"name": "infer_no_call", "class": "boolean", "default": false},
     {"name": "store_full_vcf", "class": "boolean", "default": true},
 
     {"name": "minimum_chunk_size", "class": "int", "default": 100000},

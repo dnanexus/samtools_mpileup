@@ -58,7 +58,7 @@ def main():
                 'interval': commandList[i],
                 'tableId': tableId,
                 'compress_reference': job['input']['compress_reference'],
-                'compress_no_call' : job['input']['compress_no_call'],
+                'infer_no_call' : job['input']['infer_no_call'],
                 'store_full_vcf' : job['input']['store_full_vcf'],
                 'sam_options': samOptions,
                 'bcf_options': bcfOptions,
@@ -158,8 +158,8 @@ def mapPileup():
         command = "dx_vcfToSimplevar2 --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
         if job['input']['compress_reference']:
             command += " --compress_reference"
-        if job['input']['compress_no_call']:
-            command += " --compress_no_call"
+        if job['input']['infer_no_call']:
+            command += " --infer_no_call"
         if job['input']['store_full_vcf']:
             command += " --store_full_vcf"
         if job['input']['part_number'] == 0:

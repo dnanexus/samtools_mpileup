@@ -1,14 +1,7 @@
 {
-<<<<<<< HEAD
     "globalWorkspace": [], 
-    "version": "0.0.14", 
+    "version": "0.0.15", 
     "categories": [
         "Variation calling"
     ]
 }
-=======
-  "globalWorkspace": [],
-  "version": "0.0.14", 
-  "categories": ["Variation calling"]
-}
->>>>>>> 07c9435a8896225ac7bedf29b9f74975f7be33db
