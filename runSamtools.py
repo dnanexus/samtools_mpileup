@@ -128,7 +128,6 @@ def mapPileup():
     
     regionFile = open("regions.txt", 'w')
     regionFile.write(job['input']['interval'])
-    print job['input']['interval']
     regionFile.close()
 
     print "Indexing Dictionary"
@@ -147,9 +146,7 @@ def mapPileup():
         #subprocess.check_call("samtools sort input.bam input.sorted", shell=True)
         print "Indexing"
         subprocess.check_call("samtools index input.bam", shell=True)
-        
-        
-        
+
         simpleVar = dxpy.open_dxgtable(job['input']['tableId'])
         
         #command = job['input']['command'] + job['input']['interval']
@@ -159,27 +156,20 @@ def mapPileup():
         #command += job['input']['interval']
         bedFile = open("regions.bed", 'w')
         intervalMatch = re.findall("(\w+):(\d+)-(\d+)", job['input']['interval'])
-        print "bedFile"
-        print job['input']['interval']
         if len(intervalMatch) > 0:
             for x in intervalMatch:
                 bedFile.write(x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n")
-                print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
-                #print x[0]+"\t"+str(x[1])+"\t"+str(x[2])+"\n"
             bedFile.close()
             bedFile = open("regions.bed", 'r')
-            print "full File"
-            print bedFile.read()
             bedFile.close()
             command += " -l regions.bed "
         command += job['input']['sam_options']
         command += " input.bam | bcftools view "
         command += job['input']['bcf_options']
         command += " - > output.vcf"
-        print command
         subprocess.call(command, shell=True)
 
-        command = "dx_vcfToSimplevar2 --table_id %s --vcf_file output.vcf" % (job['input']['tableId'])
+        command = "dx_vcfToSimplevar2 --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
         if job['input']['compress_reference']:
             command += " --compress_reference"
         if job['input']['compress_no_call']:
@@ -187,8 +177,7 @@ def mapPileup():
         if job['input']['store_full_vcf']:
             command += " --store_full_vcf"
         if job['input']['part_number'] == 0:
-            command += " --extract_header"
-        #print command    
+            command += " --extract_header"   
         subprocess.call(command ,shell=True)
     
 
@@ -294,10 +283,6 @@ def splitGenomeLengthLargePieces(contig_set, chunks):
     sizes = details['contigs']['sizes']
     names = details['contigs']['names']
     offsets = details['contigs']['offsets']
-    
-    for i in range(len(names)):
-        print names[i]+":"+str(sizes[i])
-
 
     commandList = []
     for i in range(chunks):
