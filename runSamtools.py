@@ -32,8 +32,10 @@ def main():
                        {"name": "ref", "type": "string"},
                        {"name": "alt", "type": "string"},
                        {"name": "qual", "type": "int32"},
-                       {"name": "coverage", "type": "int32"},
-                       {"name": "genotypeQuality", "type": "int32"}]
+                       {"name": "coverage", "type": "string"},
+                       {"name": "total_coverage", "type": "int32"},
+                       {"name": "genotype_quality", "type": "int32"}
+                       ]
     if job['input']['store_full_vcf']:
         variants_schema.extend([{"name": "vcf_alt", "type": "string"}, {"name": "vcf_additional_data", "type": "string"}])
 
