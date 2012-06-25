@@ -40,7 +40,7 @@ def main():
     simpleVar = dxpy.new_dxgtable(variants_schema, indices=[dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')])
     tableId = simpleVar.get_id()
     simpleVar = dxpy.open_dxgtable(tableId)
-    simpleVar.set_details({'original_contigset':originalContigSet, 'original_mappings':job['input']['mappings']})
+    simpleVar.set_details({'original_contigset':originalContigSet, 'original_mappings':[job['input']['mappings']]})
     simpleVar.add_types(["SimpleVar", "gri"])
 
     reduceInput = {}
