@@ -317,10 +317,7 @@ def parseVcfLine(storeSamplesIndividually, input, sample):
     qual = tabSplit[5]
     type = "unknown"
     overlap = checkOverlap(ref, altOptions)
-    lo -= overlap
-    #Subtract once to set the starting point to be the same as lo,
-    #and again to account for the ref string being longer
-    hi -= 2*overlap
+    lo += overlap
     if qual == ".":
         type = "no-call"
         qual = 0
