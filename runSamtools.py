@@ -16,14 +16,8 @@ def main():
         originalContigSet = mappingsTable.get_details()['original_contigset']
     except:
         raise Exception("The original reference genome must be attached as a detail")
-
-    #subprocess.check_call("contigset2fasta %s ref.fa" % (contigSetId), shell=True)
-    #reference_sequence = dxpy.dxlink(dxpy.upload_local_file("ref.fa"))
-
-    #print "Indexing Dictionary"
-    #subprocess.check_call("samtools faidx ref.fa", shell=True)
-
-    #referenceIndex = dxpy.dxlink(dxpy.upload_local_file("ref.fa.fai"))
+        
+    chunks = int(mappingsTable.describe()['length']/15000000)+1
 
     variants_schema = [{"name": "chr", "type": "string"},
                        {"name": "lo", "type": "int32"},
@@ -46,8 +40,7 @@ def main():
     simpleVar.add_types(["SimpleVar", "gri"])
 
     reduceInput = {}
-    #commandList = splitGenomeLengthLargePieces(originalContigSet, job['input']['intervals_to_process'], job['input']['intervals_to_exclude'],  job['input']['minimum_chunk_size'], job['input']['maximum_chunks'])
-    commandList = splitGenomeLengthLargePieces(originalContigSet, job['input']['maximum_chunks'])
+    commandList = splitGenomeLengthLargePieces(originalContigSet, chunks)
     samOptions = makeSamtoolsParameters(job)
     bcfOptions = makeBcftoolsParameters(job)
 
