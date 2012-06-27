@@ -29,8 +29,8 @@
     {"name": "infer_no_call", "class": "boolean", "label":"Infer No-call Sites", "help":"When selected, positions in the reference genome lacking any calls will be explicitly written to the variants object as no-call", "default": false},
     {"name": "store_full_vcf", "class": "boolean", "label":"Store All VCF Data", "help":"When selected, extra data beyond that stored in the simplevar variants object will be retained to allow for a full reconstitution of the VCF file", "default": true},
 
-    {"name": "intervals_to_process", "class": "string", "label":"Process Intervals", "help":"If given, GATK will only call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""},
-    {"name": "intervals_to_exclude", "class": "string", "label":"Exclude Intervals", "help":"If given, GATK will not call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""}
+    {"name": "intervals_to_process", "class": "string", "label":"Process Intervals", "help":"If given, mpileup will only call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""},
+    {"name": "intervals_to_exclude", "class": "string", "label":"Exclude Intervals", "help":"If given, mpileup will not call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""}
   ],
   "outputs": [
     {"name": "simplevar", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
