@@ -36,5 +36,22 @@
     {"name": "simplevar", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
   ],
   "run":
-    {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]}
+    {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]},
+  "openSource":true,
+  "details":{ "advancedInputs": [
+                  "disable_probabilistic_realignment",
+                   "excessive_mismatch_penalty",
+                   "max_reads_per_position",
+                   "extended_baq_computation",
+                   "minimum_mapping_quality",
+                   "minimum_base_quality",
+                   "bayesian_inference",
+                   "perform_max_likelihood_inference",
+                   "indel_to_snp_ratio",
+                   "variant_probability",
+                   "scaled_mutation_rate",
+                   "retain_unlikely_alleles",
+                   "intervals_to_process",
+                   "intervals_to_exclude"
+                   ]}
 }

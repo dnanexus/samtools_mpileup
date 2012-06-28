@@ -39,6 +39,12 @@ def main():
     simpleVar.set_details({'original_contigset':originalContigSet, 'original_mappings':[job['input']['mappings']]})
     simpleVar.add_types(["SimpleVar", "gri"])
 
+    if 'output name' in job['input']:
+        simpleVar.rename(job['input']['output name'])
+    else:
+        simpleVar.rename(mappingsTable.describe()['name'] + " Variant calls by Samtools")
+
+
     reduceInput = {}
     commandList = splitGenomeLengthLargePieces(originalContigSet, chunks)
     samOptions = makeSamtoolsParameters(job)
