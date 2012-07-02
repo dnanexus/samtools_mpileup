@@ -72,7 +72,7 @@ def main():
     reduceInput['tableId'] = tableId
     reduceJobId = dxpy.new_dxjob(fn_input=reduceInput, fn_name="reducePileup").get_id()
     #print "SimpleVar table" + json.dumps({'table_id':simpleVar.get_id()})
-    job['output'] = {'simplevar': {'job': reduceJobId, 'field': 'simplevar'}}
+    job['output'] = {'variants': {'job': reduceJobId, 'field': 'simplevar'}}
 
 def makeSamtoolsParameters(job):
     #Always output genotypes

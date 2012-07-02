@@ -33,7 +33,7 @@
     {"name": "intervals_to_exclude", "class": "string", "label":"Exclude Intervals", "help":"If given, mpileup will not call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""}
   ],
   "outputs": [
-    {"name": "simplevar", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
+    {"name": "variants", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
   ],
   "run":
     {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]},
