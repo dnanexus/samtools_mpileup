@@ -113,7 +113,6 @@ def makeBcftoolsParameters(job):
 def mapPileup():
     print "Downloading Reference Genome"
     subprocess.check_call("contigset2fasta %s ref.fa" % (job['input']['original_contig_set']), shell=True)
-    #subprocess.check_call("dx_writeReferenceIndex --contig_set %s --writeSamtoolsIndex ref.fa.fai" % (job['input']['original_contig_set']), shell=True)
 
     regionFile = open("regions.txt", 'w')
     regionFile.write(job['input']['interval'])
@@ -123,8 +122,8 @@ def mapPileup():
     subprocess.check_call("samtools faidx ref.fa", shell=True)
 
     print "Converting Table to SAM"
-    print "dx_mappingsTableToSam2 --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id'])
-    subprocess.check_call("dx_mappingsTableToSam2 --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id']), shell=True)
+    #print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id'])
+    subprocess.check_call("dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id']), shell=True)
 
     if checkSamContainsRead("input.sam"):
         print "Converting to BAM"
@@ -156,7 +155,7 @@ def mapPileup():
         command += " - > output.vcf"
         subprocess.call(command, shell=True)
 
-        command = "dx_vcfToSimplevar2 --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
+        command = "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
         if job['input']['compress_reference']:
             command += " --compress_reference"
         if job['input']['infer_no_call']:
