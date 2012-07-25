@@ -152,10 +152,11 @@ def mapPileup():
         command += job['input']['sam_options']
         command += " input.bam | bcftools view "
         command += job['input']['bcf_options']
-        command += " - > output.vcf"
-        subprocess.call(command, shell=True)
+        #command += " - > output.vcf | "
+        command += " | "
+        
 
-        command = "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
+        command += "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
         if job['input']['compress_reference']:
             command += " --compress_reference"
         if job['input']['infer_no_call']:
