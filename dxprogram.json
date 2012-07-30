@@ -35,7 +35,7 @@
     {"name": "variants", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
   ],
   "runSpec":
-    {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]},
+    {"file": "runSamtools.py", "interpreter": "python2.7_old", "execDepends": [{"name": "perl"}]},
   "openSource":true,
   "details":{ "advancedInputs": [
                   "disable_probabilistic_realignment",
