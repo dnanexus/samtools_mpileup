@@ -1,4 +1,60 @@
 {
+  "name": "samtools_mpileup",
+  "title": "Samtools Pileup",
+  "summary": "Variant calling for SNPs and Indels using Samtools Pileup",
+  "description": "Samtools pileup takes a set of mapped reads and calls SNP and indels variations from a reference genome, using the mpileup option of samtools.",
+  "dxapi": "1.03rc",
+  "inputSpec": [
+    {"name": "mappings", "class": "gtable", "label":"Mappings Object", "help":"The mapped reads which will be used to call variants from", "type": "LetterMappings"},
+    {"name": "reference", "class": "record", "label":"Reference Genome", "help":"The reference genome to call variants against", "type": "ContigSet"},
+    {"name": "output name", "class": "string", "label":"Output Name", "help": "The name of the generated variants object", "optional": true},
+
+    {"name": "disable_probabilistic_realignment", "label":"No Realignment", "help":"When this option is selection mpileup will not attempt to realign potentially misaligned reads. Turning this off will increase the false positive rate", "class": "boolean", "default": false},
+    {"name": "excessive_mismatch_penalty", "label":"Mismatch Penalty", "help":"This coefficient is used to downgrade the mapping quality of reads containing multiple mismatches", "class": "int", "default": 50},
+    {"name": "max_reads_per_position", "class": "int", "label":"Max Coverage", "help":"For each position, samtools will consider at most this many reads", "default": 250},
+    {"name": "extended_baq_computation", "class": "boolean", "label":"Extend Quality Computation", "help":"Extra re-computation of base quality for mapped reads. Selecting this will slightly improve sensitivity, especially for MNP, but slightly decrease specifcity", "default": false},
+    {"name": "minimum_mapping_quality", "class": "int", "label":"Min Mapping Quality", "help":"Mapped quality of an alignment must be above this threshold to be considered", "default": 0},
+    {"name": "minimum_base_quality", "class": "int", "label":"Min Base Quality", "help":"Base read quality must be above this threshold to be considered", "default": 13},
+
+    {"name": "bayesian_inference", "class": "boolean", "label":"Use Bayesian Model", "help":"If selected, a bayesian model will be used to call variants. Selecting this will force the option for maximum-likelihood inference for genotypes", "default": true},
+    {"name": "perform_max_likelihood_inference", "class": "boolean", "label":"Use max-likelihood", "help":"Perform max-likelihood inference only, including estimating the site allele frequency, testing Hardy-Weinberg equlibrium and testing associations with LRT", "default": false},
+    {"name": "indel_to_snp_ratio", "class": "float", "label":"Indel:SNP Ratio", "help":"Assume this ratio for the prior of the ratio of Indels to SNPs", "default": 0.15},
+    {"name": "variant_probability", "class": "float", "label":"Variant Call Probability", "help":"Call a variant if its probability is estimated at greater than this", "default": 0.5},
+    {"name": "scaled_mutation_rate", "class": "float", "label":"Mutation Rate", "help":"Prior used for likelihood of finding variants", "default": 0.001},
+    {"name": "output_variants_only", "class": "boolean", "label":"Output Only Variants", "help":"If selected, reference calls will not be printed", "default": true},
+    {"name": "retain_unlikely_alleles", "class": "boolean", "label":"Keep Unlikely Alleles", "help":"If selected, alleles mpileup considers but rejects as unlikely will be retained", "default": false},
+
+    {"name": "compress_reference", "class": "boolean", "label":"Compress Reference", "help":"When selected, contiguous rows that are called as reference will be compressed to a single row to save space", "default": false},
+    {"name": "infer_no_call", "class": "boolean", "label":"Infer No-call Sites", "help":"When selected, positions in the reference genome lacking any calls will be explicitly written to the variants object as no-call", "default": false},
+    {"name": "store_full_vcf", "class": "boolean", "label":"Store All VCF Data", "help":"When selected, extra data beyond that stored in the simplevar variants object will be retained to allow for a full reconstitution of the VCF file", "default": true},
+
+    {"name": "intervals_to_process", "class": "string", "label":"Process Intervals", "help":"If given, mpileup will only call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""},
+    {"name": "intervals_to_exclude", "class": "string", "label":"Exclude Intervals", "help":"If given, mpileup will not call variants on these regions. Input must be a string of format \"-L chr:lo-hi\" which can have as many -L arguments as desired", "default": ""}
+  ],
+  "outputSpec": [
+    {"name": "variants", "class": "gtable", "type": {"$and": ["SimpleVar", "gri"]}}
+  ],
+  "runSpec":
+    {"file": "runSamtools.py", "interpreter": "python2.7_old", "execDepends": [{"name": "perl"}]},
+  "openSource":true,
+  "details":{ "advancedInputs": [
+                  "disable_probabilistic_realignment",
+                   "excessive_mismatch_penalty",
+                   "max_reads_per_position",
+                   "extended_baq_computation",
+                   "minimum_mapping_quality",
+                   "minimum_base_quality",
+                   "bayesian_inference",
+                   "perform_max_likelihood_inference",
+                   "indel_to_snp_ratio",
+                   "variant_probability",
+                   "scaled_mutation_rate",
+                   "retain_unlikely_alleles",
+                   "intervals_to_process",
+                   "intervals_to_exclude"
+                   ]}
+,
+
     "resources": [],
     "version": "0.0.22",
     "categories": [
