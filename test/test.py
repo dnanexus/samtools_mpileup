@@ -70,7 +70,7 @@ class TestMyApp(unittest.TestCase):
            
             
         bundled_resources = dxpy.app_builder.upload_resources(src_dir)
-        program_id = dxpy.app_builder.upload_program(src_dir, bundled_resources, overwrite=True)
+        program_id = dxpy.app_builder.upload_applet(src_dir, bundled_resources, overwrite=True)
         cls.program = dxpy.DXApplet(program_id)
 
     def setUp(self):
