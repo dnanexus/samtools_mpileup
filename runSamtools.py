@@ -123,7 +123,7 @@ def mapPileup():
 
     print "Converting Table to SAM"
     #print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id'])
-    subprocess.check_call("dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id']), shell=True)
+    subprocess.check_call("dx-mappings-to-sam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id']), shell=True)
 
     if checkSamContainsRead("input.sam"):
         print "Converting to BAM"
@@ -156,7 +156,7 @@ def mapPileup():
         command += " | "
         
 
-        command += "dx_vcfToSimplevar --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
+        command += "dx-vcf-to-simplevar --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
         if job['input']['compress_reference']:
             command += " --compress_reference"
         if job['input']['infer_no_call']:
