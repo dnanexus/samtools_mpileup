@@ -3,7 +3,7 @@
   "title": "Samtools Pileup",
   "summary": "Variant calling for SNPs and Indels using Samtools Pileup",
   "description": "Samtools pileup takes a set of mapped reads and calls SNP and indels variations from a reference genome, using the mpileup option of samtools.",
-  "dxapi": "1.03rc",
+  "dxapi": "1.0.0",
   "inputSpec": [
     {"name": "mappings", "class": "gtable", "label":"Mappings Object", "help":"The mapped reads which will be used to call variants from", "type": "LetterMappings"},
     {"name": "reference", "class": "record", "label":"Reference Genome", "help":"The reference genome to call variants against", "type": "ContigSet"},
