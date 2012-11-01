@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os, sys, unittest, json, subprocess
 
-import dxpy, dxpy.program_builder
+import dxpy, dxpy.app_builder
 from dxpy.exceptions import *
 
 src_dir = os.path.join(os.path.dirname(__file__), "..")
@@ -14,8 +14,8 @@ from optparse import OptionParser
 
 def makeInputsBwa():
     try:
-        contigset_importer = dxpy.DXProgram(dxpy.find_data_objects(classname="program", properties={"name": "fasta_contigset_importer"}).next()['id'])
-        reads_importer = dxpy.DXProgram(dxpy.find_data_objects(classname="program", properties={"name": "Letter Space FASTQ importer"}).next()['id'])
+        contigset_importer = dxpy.DXApplet(dxpy.find_data_objects(classname="applet", properties={"name": "fasta_contigset_importer"}).next()['id'])
+        reads_importer = dxpy.DXApplet(dxpy.find_data_objects(classname="applet", properties={"name": "Letter Space FASTQ importer"}).next()['id'])
     except StopIteration:
         raise Exception("fasta_contigset_importer or Letter Space FASTQ importer not found, please upload them")
     
@@ -69,9 +69,9 @@ class TestMyApp(unittest.TestCase):
             
            
             
-        bundled_resources = dxpy.program_builder.upload_resources(src_dir)
-        program_id = dxpy.program_builder.upload_program(src_dir, bundled_resources, overwrite=True)
-        cls.program = dxpy.DXProgram(program_id)
+        bundled_resources = dxpy.app_builder.upload_resources(src_dir)
+        program_id = dxpy.app_builder.upload_applet(src_dir, bundled_resources, overwrite=True)
+        cls.program = dxpy.DXApplet(program_id)
 
     def setUp(self):
         pass
@@ -84,7 +84,7 @@ class TestMyApp(unittest.TestCase):
             input = self.base_input
             print "Running program with", input
             try:   
-                bwa = dxpy.DXProgram(dxpy.find_data_objects(classname="program", properties={"name": "BWA"}).next()['id'])
+                bwa = dxpy.DXApplet(dxpy.find_data_objects(classname="applet", properties={"name": "BWA"}).next()['id'])
             except:
                 print "BWA not found, please upload it"
             job = bwa.run(input)
