@@ -143,15 +143,9 @@ def mapPileup(**job_inputs):
     subprocess.check_call("samtools faidx ref.fa", shell=True)
 
     print "Converting Table to SAM"
-<<<<<<< HEAD
     command = "dx-mappings-to-sam %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job_inputs['mappings_table_id'])
     print "Running: " + command
     subprocess.check_call(command, shell=True)
-=======
-    #print "dx_mappingsTableToSam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id'])
-    subprocess.check_call("dx-mappings-to-sam --table_id %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job['input']['mappings_table_id']), shell=True)
-
->>>>>>> 3b9136cfe41f629289cef375b7a8ac304f87baa0
     if checkSamContainsRead("input.sam"):
         print "Converting to BAM"
         subprocess.check_call("samtools view -bS input.sam > input.bam", shell=True)
@@ -178,13 +172,8 @@ def mapPileup(**job_inputs):
         print "Pileup Command: " + command
         subprocess.check_call(command ,shell=True)
 
-<<<<<<< HEAD
         command = "dx_vcfToVariants2 --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job_inputs['tableId'])
         if job_inputs['compress_reference']:
-=======
-        command += "dx-vcf-to-simplevar --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job['input']['tableId'])
-        if job['input']['compress_reference']:
->>>>>>> 3b9136cfe41f629289cef375b7a8ac304f87baa0
             command += " --compress_reference"
         if job_inputs['infer_no_call']:
             command += " --infer_no_call"
