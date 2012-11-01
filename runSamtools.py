@@ -14,7 +14,6 @@ def main(**job_inputs):
     mappingsTable = dxpy.open_dxgtable(job_inputs['mappings']['$dnanexus_link'])
     mappingsTableId = mappingsTable.get_id()
     
-
     #This controls the degree of parallelism
     chunks = int(mappingsTable.describe()['length']/job_inputs['reads_per_job'])+1
 
@@ -24,6 +23,10 @@ def main(**job_inputs):
     except:
         raise Exception("The original reference genome must be attached as a detail")
 
+
+    #In the next major section of code, we construct a variants table. As regions of the genome are passed to each worker
+    #and variants are called on them, the workers will add rows to this table concurrently.
+    
     variants_schema = [
         {"name": "chr", "type": "string"}, 
         {"name": "lo", "type": "int32"},
@@ -45,19 +48,15 @@ def main(**job_inputs):
     description = {}
     samples = []
 
-
     indices = [dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')]
-    formats = {}
-    infos = {}
-    filters = {}
     
     ##The following section creates the sample-specific table columns
     for k, v in headerInfo['tags']['info'].iteritems():
         variants_schema.append({"name": "info_"+k, "type":translateTagTypeToColumnType(v)})
         description[k] = {'name' : k, 'description' : v['description'], 'type' : v['type'], 'number' : v['number']}
     
+    #For each sample, add the sample-specific columns to the schema, at present only one sample is supported
     numSamples = 1
-    #For each sample, write the sample-specific columns, at present only one sample is supported
     for i in range(numSamples):
       variants_schema.extend([
         {"name": "genotype_"+str(i), "type": "string"},
@@ -75,6 +74,8 @@ def main(**job_inputs):
           variants_schema.append({"name": "format_"+k+"_"+str(i), "type":translateTagTypeToColumnType(v)})
 
     #TODO: Add lexicographic indices when secondary indices are supported
+
+    
     variants = dxpy.new_dxgtable(variants_schema, indices=[dxpy.DXGTable.genomic_range_index("chr", "lo", "hi", "gri")])
     tableId = variants.get_id()
     variants = dxpy.open_dxgtable(tableId)
@@ -90,7 +91,6 @@ def main(**job_inputs):
     else:
         variants.rename(mappingsTable.describe()['name'] + " variant calls by Samtools mpileup")
 
-
     #Split the genome into evenly sized regions
     genomeRegions = splitGenomeLengthLargePieces(originalContigSet, chunks)
 
@@ -98,8 +98,8 @@ def main(**job_inputs):
     samOptions = makeSamtoolsParameters(**job_inputs)
     bcfOptions = makeBcftoolsParameters(**job_inputs)
 
-
-    #This 
+    #The rest of the main function contains the map-reduce functionality. For each genome chunk, an input spec is created for a new child job.
+    #Which specifies
     reduce_job_inputs = {}
     for i in range(len(commandList)):
         #print commandList[i]
@@ -294,7 +294,6 @@ def splitGenomeLengthLargePieces(contig_set, chunks):
     
     for i in range(len(names)):
         print names[i]+":"+str(sizes[i])
-
 
     commandList = []
     for i in range(chunks):
