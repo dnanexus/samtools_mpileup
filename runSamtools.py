@@ -14,7 +14,6 @@ def main(**job_inputs):
     mappingsTable = dxpy.open_dxgtable(job_inputs['mappings']['$dnanexus_link'])
     mappingsTableId = mappingsTable.get_id()
     
-
     #This controls the degree of parallelism
     chunks = int(mappingsTable.describe()['length']/job_inputs['reads_per_job'])+1
 
@@ -24,6 +23,10 @@ def main(**job_inputs):
     except:
         raise Exception("The original reference genome must be attached as a detail")
 
+
+    #In the next major section of code, we construct a variants table. As regions of the genome are passed to each worker
+    #and variants are called on them, the workers will add rows to this table concurrently.
+    
     variants_schema = [
         {"name": "chr", "type": "string"}, 
         {"name": "lo", "type": "int32"},
@@ -45,19 +48,15 @@ def main(**job_inputs):
     description = {}
     samples = []
 
-
     indices = [dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')]
-    formats = {}
-    infos = {}
-    filters = {}
     
     ##The following section creates the sample-specific table columns
     for k, v in headerInfo['tags']['info'].iteritems():
         variants_schema.append({"name": "info_"+k, "type":translateTagTypeToColumnType(v)})
         description[k] = {'name' : k, 'description' : v['description'], 'type' : v['type'], 'number' : v['number']}
     
+    #For each sample, add the sample-specific columns to the schema, at present only one sample is supported
     numSamples = 1
-    #For each sample, write the sample-specific columns, at present only one sample is supported
     for i in range(numSamples):
       variants_schema.extend([
         {"name": "genotype_"+str(i), "type": "string"},
@@ -75,6 +74,8 @@ def main(**job_inputs):
           variants_schema.append({"name": "format_"+k+"_"+str(i), "type":translateTagTypeToColumnType(v)})
 
     #TODO: Add lexicographic indices when secondary indices are supported
+
+    
     variants = dxpy.new_dxgtable(variants_schema, indices=[dxpy.DXGTable.genomic_range_index("chr", "lo", "hi", "gri")])
     tableId = variants.get_id()
     variants = dxpy.open_dxgtable(tableId)
@@ -90,7 +91,6 @@ def main(**job_inputs):
     else:
         variants.rename(mappingsTable.describe()['name'] + " variant calls by Samtools mpileup")
 
-
     #Split the genome into evenly sized regions
     genomeRegions = splitGenomeLengthLargePieces(originalContigSet, chunks)
 
@@ -98,8 +98,8 @@ def main(**job_inputs):
     samOptions = makeSamtoolsParameters(**job_inputs)
     bcfOptions = makeBcftoolsParameters(**job_inputs)
 
-
-    #This 
+    #The rest of the main function contains the map-reduce functionality. For each genome chunk, an input spec is created for a new child job.
+    #Which specifies
     reduce_job_inputs = {}
     for i in range(len(commandList)):
         #print commandList[i]
@@ -144,7 +144,7 @@ def mapPileup(**job_inputs):
     print "Indexing Dictionary"
     subprocess.check_call("samtools faidx ref.fa", shell=True)
 
-    #The sam-to-mappings script in dx-toolkit, the region_index_offset option 
+    #The sam-to-mappings script in dx-toolkit, the region_index_offset option is specified to convert from 1-indexed to 0-indexed coordinates
     print "Converting Table to SAM"
     command = "dx-mappings-to-sam %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job_inputs['mappings_table_id'])
     print "Running: " + command
@@ -157,7 +157,8 @@ def mapPileup(**job_inputs):
 
         variants = dxpy.open_dxgtable(job_inputs['tableId'])
         command = "samtools mpileup -uf ref.fa"
-        #command += job_inputs['interval']
+        
+        #Since samtools takes a bed file to specify the regions, this takes the interval from the -L chrX:lo-hi format and puts it into BED
         bedFile = open("regions.bed", 'w')
         intervalMatch = re.findall("-L ([^:]*):(\d+)-(\d+)", job_inputs['interval'])
         if len(intervalMatch) > 0:
@@ -175,6 +176,7 @@ def mapPileup(**job_inputs):
         print "Pileup Command: " + command
         subprocess.check_call(command ,shell=True)
 
+        #Convert the vcf file into variants. The dx_vcfToVariants is a script provided as resources as it has not yet been incorporated into dx-toolkit
         command = "dx_vcfToVariants2 --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job_inputs['tableId'])
         if job_inputs['compress_reference']:
             command += " --compress_reference"
@@ -185,6 +187,8 @@ def mapPileup(**job_inputs):
 
         print "Import variants command: " + command
         subprocess.check_call(command ,shell=True)
+    
+    #Return 'ok', a signal which the reduce job looks for in order to know when it can begin closing the table
     job_outputs = {'ok':True}
     return job_outputs
         
