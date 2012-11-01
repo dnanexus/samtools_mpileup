@@ -54,7 +54,7 @@
                    "intervals_to_exclude"
                    ]},
   "resources": [],
-  "version": "0.0.40",
+  "version": "0.1.0",
   "categories": ["Variation calling"],
   "access": {"network": ["github.com"]}
 
