@@ -92,7 +92,7 @@ def main(**job_inputs):
 
 
     #Split the genome into evenly sized regions
-    commandList = splitGenomeLengthLargePieces(originalContigSet, chunks)
+    genomeRegions = splitGenomeLengthLargePieces(originalContigSet, chunks)
 
     #Generate the command line arguments needed to run samtools and bcftools
     samOptions = makeSamtoolsParameters(**job_inputs)
@@ -107,7 +107,7 @@ def main(**job_inputs):
             map_job_inputs = {
                 'mappings_table_id':mappingsTableId,
                 'original_contig_set': contigSetId,
-                'interval': commandList[i],
+                'interval': genomeRegions[i],
                 'tableId': tableId,
                 'compress_reference': job_inputs['compress_reference'],
                 'compress_no_call': job_inputs['compress_no_call'],
@@ -135,6 +135,8 @@ def mapPileup(**job_inputs):
     print "Downloading Reference Genome"
     subprocess.check_call("contigset2fasta %s ref.fa" % (job_inputs['original_contig_set']), shell=True)
 
+    #The mappings-to-sam script takes a file with a list of regions in the form -L chrX:lo-hi, as produced by the genome splitting region.
+    #This generates the file
     regionFile = open("regions.txt", 'w')
     regionFile.write(job_inputs['interval'])
     regionFile.close()
@@ -142,6 +144,7 @@ def mapPileup(**job_inputs):
     print "Indexing Dictionary"
     subprocess.check_call("samtools faidx ref.fa", shell=True)
 
+    #The sam-to-mappings script in dx-toolkit, the region_index_offset option is specified to convert from 1-indexed to 0-indexed coordinates
     print "Converting Table to SAM"
     command = "dx-mappings-to-sam %s --output input.sam --region_index_offset -1 --region_file regions.txt" % (job_inputs['mappings_table_id'])
     print "Running: " + command
@@ -154,7 +157,8 @@ def mapPileup(**job_inputs):
 
         variants = dxpy.open_dxgtable(job_inputs['tableId'])
         command = "samtools mpileup -uf ref.fa"
-        #command += job_inputs['interval']
+        
+        #Since samtools takes a bed file to specify the regions, this takes the interval from the -L chrX:lo-hi format and puts it into BED
         bedFile = open("regions.bed", 'w')
         intervalMatch = re.findall("-L ([^:]*):(\d+)-(\d+)", job_inputs['interval'])
         if len(intervalMatch) > 0:
@@ -172,6 +176,7 @@ def mapPileup(**job_inputs):
         print "Pileup Command: " + command
         subprocess.check_call(command ,shell=True)
 
+        #Convert the vcf file into variants. The dx_vcfToVariants is a script provided as resources as it has not yet been incorporated into dx-toolkit
         command = "dx_vcfToVariants2 --table_id %s --vcf_file output.vcf --region_file regions.txt" % (job_inputs['tableId'])
         if job_inputs['compress_reference']:
             command += " --compress_reference"
@@ -182,6 +187,8 @@ def mapPileup(**job_inputs):
 
         print "Import variants command: " + command
         subprocess.check_call(command ,shell=True)
+    
+    #Return 'ok', a signal which the reduce job looks for in order to know when it can begin closing the table
     job_outputs = {'ok':True}
     return job_outputs
         
@@ -258,7 +265,7 @@ def extractHeader(vcfFileName, elevatedTags):
             break
     return result
 
-def checkIntervalRange(includeList, chromosome, lo, hi):
+def checkIntervalRange(chromosome, lo, hi):
     included = False
     command = ''
     if len(includeList) == 0:
@@ -300,12 +307,12 @@ def splitGenomeLengthLargePieces(contig_set, chunks):
 
     while chromosome < len(names):
         if position + (chunkSize - currentLength) >= sizes[chromosome]:
-            commandList[currentChunk] += checkIntervalRange({}, names[chromosome], position+1, sizes[chromosome])
+            commandList[currentChunk] += checkIntervalRange(names[chromosome], position+1, sizes[chromosome])
             currentLength += sizes[chromosome] - position
             chromosome += 1
             position = 0
         else:
-            commandList[currentChunk] += checkIntervalRange({}, names[chromosome], position+1, position+(chunkSize-currentLength)+1)
+            commandList[currentChunk] += checkIntervalRange(names[chromosome], position+1, position+(chunkSize-currentLength)+1)
             position += (chunkSize-currentLength) + 1
             if currentChunk < chunks-1:
                 currentChunk += 1
@@ -318,6 +325,8 @@ def checkSamContainsRead(samFileName):
             return True
     return False
 
+
+#This maps the tag types specified in the VCF header into the types used by the table schema.
 def translateTagTypeToColumnType(tag):
   if tag['type'] == "Flag":
     return "boolean"
