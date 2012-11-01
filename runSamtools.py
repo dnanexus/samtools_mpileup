@@ -101,9 +101,8 @@ def main(**job_inputs):
     #The rest of the main function contains the map-reduce functionality. For each genome chunk, an input spec is created for a new child job.
     #Which specifies
     reduce_job_inputs = {}
-    for i in range(len(commandList)):
-        #print commandList[i]
-        if len(commandList[i]) > 0:
+    for i in range(len(genomeRegions)):
+        if len(genomeRegions[i]) > 0:
             map_job_inputs = {
                 'mappings_table_id':mappingsTableId,
                 'original_contig_set': contigSetId,
@@ -275,9 +274,9 @@ def splitGenomeLengthLargePieces(contig_set, chunks):
         print names[i]+":"+str(sizes[i])
 
 
-    commandList = []
+    genomeRegions = []
     for i in range(chunks):
-        commandList.append('')
+        genomeRegions.append('')
     position = 0
     chromosome = 0
     chunkSize = sum(sizes) / chunks
@@ -286,17 +285,17 @@ def splitGenomeLengthLargePieces(contig_set, chunks):
 
     while chromosome < len(names):
         if position + (chunkSize - currentLength) >= sizes[chromosome]:
-            commandList[currentChunk] += " -L %s:%d-%d" % (names[chromosome], position+1, sizes[chromosome])
+            genomeRegions[currentChunk] += " -L %s:%d-%d" % (names[chromosome], position+1, sizes[chromosome])
             currentLength += sizes[chromosome] - position
             chromosome += 1
             position = 0
         else:
-            commandList[currentChunk] += " -L %s:%d-%d" % (names[chromosome], position+1, position+(chunkSize-currentLength)+1)
+            genomeRegions[currentChunk] += " -L %s:%d-%d" % (names[chromosome], position+1, position+(chunkSize-currentLength)+1)
             position += (chunkSize-currentLength) + 1
             if currentChunk < chunks-1:
                 currentChunk += 1
             currentLength = 0
-    return commandList
+    return genomeRegions
 
 def checkSamContainsRead(samFileName):
     for line in open(samFileName, 'r'):
