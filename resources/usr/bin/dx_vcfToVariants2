@@ -63,7 +63,7 @@ def main():
     global tagDefaults
     tagDefaults = {}
     global missingDefault
-    missingDefault = -999999
+    missingDefault = -2**31
     global tagOrder
     tagOrder = {'format' : [], 'info': []}
     for x in tags:
