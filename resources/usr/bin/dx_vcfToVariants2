@@ -62,8 +62,6 @@ def main():
     
     global tagDefaults
     tagDefaults = {}
-    global missingDefault
-    missingDefault = -2**31
     global tagOrder
     tagOrder = {'format' : [], 'info': []}
     for x in tags:
@@ -75,11 +73,11 @@ def main():
             if x['type'] == 'string':
                 tagDefaults[x['name']] = ''
             if x['type'] == 'int64' or x['type'] == 'int32' or x['type'] == 'int16' or x['type'] == 'int8' or x['type'] == 'uint64' or x['type'] == 'uint32' or x['type'] == 'uint16' or x['type'] == 'uint8':
-                tagDefaults[x['name']] = missingDefault
+                tagDefaults[x['name']] = dxpy.NULL
             if x['type'] == 'boolean':
                 tagDefaults[x['name']] = False
             if x['type'] == 'double':
-                tagDefaults[x['name']] = float(missingDefault)
+                tagDefaults[x['name']] = dxpy.NULL
             if x['name'].count("format") > 0:
                 if x['name'] not in tagOrder['format']:
                     tagOrder['format'].append(x['name'])
@@ -96,12 +94,18 @@ def main():
     try:
         originalContig = variantsTable.get_details()['original_contigset']
     except:
-        raise Exception("The original reference genome must be attached as a detail")
+        raise dxpy.AppError("The original reference genome must be attached as a detail")
 
     regions = {}
     contigDetails = dxpy.DXRecord(originalContig).get_details()['contigs']
     contigNames = contigDetails['names']
     contigSizes = contigDetails['sizes']
+    
+    global filtersPresent
+    if variantsTable.get_details().get('filters') == None:
+        filtersPresent = False
+    else:
+        filtersPresent = True
     
     if opts.region_file != "":
         regionText = open(opts.region_file, 'r').read()
@@ -131,13 +135,10 @@ def main():
     #vcfFile = open(vcfFileName, 'r')       
     #with unpack_and_open(vcfFileName) as vcfFile:
     #for input in open(vcfFileName, 'r'):
-    while 1:
-        try:
-            try:
-                rawInput = unicode(vcfFile.next())
-                input = rawInput.encode('utf8', 'replace')
-            except UnicodeDecodeError:
-                raise AppError("Could parse some characters in the file, please check the encoding of the file, perhaps it is not "+encoding)
+    try:
+        for line in vcfFile:
+            rawInput = unicode(line)
+            input = rawInput.encode('utf8', 'replace')
             if count%100000 == 0:
                 print "Processed count %i variants " % count
             if input[0] != "#":
@@ -161,11 +162,12 @@ def main():
                         priors['position'] = vcfLine['hi']
                 else:
                     writeReferenceBuffer(variantsTable, refBuffer)
-        except StopIteration:
-            break
-        except UnicodeDecodeError:
-            print "UnicodeError"
-    writeReferenceBuffer(variantsTable, refBuffer)
+        writeReferenceBuffer(variantsTable, refBuffer)
+    except UnicodeDecodeError:
+        errorFile = open("AppError.txt", 'w')
+        errorFile.write("Could not parse some characters in the file, please check the encoding of the file, perhaps it is not "+encoding)
+        errorFile.close()
+        sys.exit(1)
     
     if inferNoCall:
         for chr, reg in highestObservedInRegion.iteritems():
@@ -199,9 +201,6 @@ def parseVcfLine(input):
         ids = ''
     ref = tabSplit[3].replace(".","")
     
-    
-    
-
     #In VCF format, the prior character to a sequence change is given in some cases (Ins, Del)
     #   we are removing this in our format, and so need to figure out which characters to filter
     altOptions = []
@@ -360,11 +359,11 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
         alt += x.upper()+","
     alt = alt.rstrip(",")
 
-    entry = [chr, lo, hi, ref, alt, qual, filt, ids]
+    entry = [chr, lo, hi, ref, alt, qual, ids]    
+    if filtersPresent:
+        entry.append(filt)
     entry.extend(appendTags(tagOrder['info'], infoTags))
-    
-    
-    
+
     for i in range(len(samples)):
         genotype = formatTags[i]['format_GT'].replace("|", "/")
         totalCoverage = int(formatTags[i]['format_DP'])
@@ -408,9 +407,8 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
             allelePos += 1
         phasedField = phasedField.rstrip('/')
     
-        
-        sampleVariantQuality = float(missingDefault)
-        sampleGenotypeQuality = float(missingDefault)
+        sampleVariantQuality = dxpy.NULL
+        sampleGenotypeQuality = dxpy.NULL
         
         if formatTags[i].get("format_PL") != None:
             sampleVariantQuality = 0.0
@@ -427,17 +425,22 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
             try:
                 sampleVariantQuality = float(phredProbabilities[0])
             except:
-                sampleVariantQuality = float(missingDefault)
+                sampleVariantQuality = dxpy.NULL
             try:
                 sampleGenotypeQuality = -10.0*float(math.log10(sampleGenotypeQuality))
             except:
-                sampleGenotypeQuality = float(missingDefault)
+                sampleGenotypeQuality = dxpy.NULL
+        
+        if sampleGenotypeQuality < 0.0:
+            sampleGenotypeQuality = 0.0
+        if sampleVariantQuality < 0.0:
+            variantGenotypeQuality = 0.0
 
         typeList = []
         type = 'no-call'
         for x in genotypeSplit:
             if x != ".":
-                if x == '0':
+                if int(x) == 0:
                     type = 'ref'
                 else:
                     typeList.append(calculateVariantType(ref, altOptions[int(x)-1]))
@@ -460,19 +463,23 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
         entry[3] = ''
         if compressNoCall == False:
             #checkEntry(entry, typeCheck)
+            #print entry
             variantsTable.add_rows([entry[:]])
         return "write ref buffer"
     elif allRef and len(samples) > 0:
         entry[3] = ''
         if compressReference:
             #checkEntry(entry, typeCheck)
+            #print entry
             refBuffer.append(entry[:])
             return "no action"
         else:
             #checkEntry(entry, typeCheck)
+            #print entry
             variantsTable.add_rows([entry[:]])
     else:
-        checkEntry(entry, typeCheck)
+        #checkEntry(entry, typeCheck)
+        #print entry
         variantsTable.add_rows([entry[:]])
         return "write ref buffer"
         
@@ -493,15 +500,18 @@ def checkRightPhasing(phased, position):
     return True
 
 def writeCompressedRow(variantsTable, chr, lo, hi, typ):
-    entry = [chr, lo, hi, "", "", float(missingDefault), '', '']
+    entry = [chr, lo, hi, "", "", dxpy.NULL, '']
+    if filtersPresent:
+        entry.append('')
     entry.extend(appendTags(tagOrder['info'], {}))
     for i in samples:
         if typ == 'ref':
             entry.extend(['0/0', '0/1'])
         else:
             entry.extend(['./.', './.'])
-        entry.extend([typ, float(missingDefault), float(missingDefault), '', missingDefault ])
+        entry.extend([typ, dxpy.NULL, dxpy.NULL, '', dxpy.NULL ])
         entry.extend(appendTags(tagOrder['format'], {}))
+    #print entry
     variantsTable.add_rows([entry[:]])
 
 def writeNoCallRow(variantsTable, chr, lo, hi, tagOrder, tagDefaults):
