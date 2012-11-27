@@ -53,9 +53,13 @@
                    "intervals_to_process",
                    "intervals_to_exclude"
                    ]},
-  "resources": [],
   "version": "0.1.0",
   "categories": ["Variation calling"],
-  "access": {"network": ["github.com"]}
-
+  "details":{
+    "upstreamAuthors": "Heng Li, Bob Handsaker, Alec Wysoker, Tim Fennell, Jue Ruan, Nils Homer, Gabor Marth, Goncalo Abecasis, Richard Durbin, and 1000 Genome Project Data Processing Subgroup",
+    "upstreamVersion": "0.1.18-dev (r982:313)",
+    "upstreamUrl": "http://samtools.sourceforge.net/",
+    "upstreamLicenses": ["BSD", "MIT"],
+    "citations":["doi:10.1093/bioinformatics/btp352"]
+  }
 }
