@@ -34,7 +34,6 @@ def main(**job_inputs):
         {"name": "ref", "type": "string"},
         {"name": "alt", "type": "string"},
         {"name": "qual", "type": "double"},
-        {"name": "filter", "type": "string"},
         {"name": "ids", "type": "string"}
          ]
 
@@ -82,8 +81,8 @@ def main(**job_inputs):
     variants.add_types(["Variants", "gri"])
     
     details = {'samples':samples, 'original_contigset':job_inputs['reference'], 'original_mappings':job_inputs['mappings'], 'formats':headerInfo['tags']['format'], 'infos':headerInfo['tags']['info']}
-    if headerInfo.get('filters') != {}:
-      details['filters'] = headerInfo['filters']
+    #if headerInfo.get('filters') != {}:
+    #  details['filters'] = headerInfo['filters']
     variants.set_details(details)
 
     if 'output name' in job_inputs:
