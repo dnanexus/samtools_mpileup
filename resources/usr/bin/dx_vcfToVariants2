@@ -637,7 +637,7 @@ def appendTags(order, tags):
                 if tagData != False:
                     tagData = True
             elif isinstance(tagDefaults[x], int):
-                tagData = int(tagData)
+                tagData = int(float(tagData))
             else:
                 tagData = str(tagData)
             result.append(tagData)
