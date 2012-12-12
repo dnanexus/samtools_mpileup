@@ -356,8 +356,9 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
                     
     alt = ''
     for x in altOptions:
-        alt += x.upper()+","
-    alt = alt.rstrip(",")
+        if altOptions.index(x) > 0:
+            alt += ","
+        alt += x.upper()
 
     entry = [chr, lo, hi, ref, alt, qual, ids]    
     if filtersPresent:

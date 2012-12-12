@@ -53,7 +53,7 @@
                    "intervals_to_process",
                    "intervals_to_exclude"
                    ]},
-  "version": "0.1.0",
+  "version": "0.1.1",
   "categories": ["Variation calling"],
   "details":{
     "upstreamAuthors": "Heng Li, Bob Handsaker, Alec Wysoker, Tim Fennell, Jue Ruan, Nils Homer, Gabor Marth, Goncalo Abecasis, Richard Durbin, and 1000 Genome Project Data Processing Subgroup",
