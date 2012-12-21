@@ -94,7 +94,10 @@ def main():
     try:
         originalContig = variantsTable.get_details()['original_contigset']
     except:
-        raise dxpy.AppError("The original reference genome must be attached as a detail")
+        errorFile = open("AppError.txt", 'w')
+        errorFile.write("The original reference genome must be attached as a detail")
+        errorFile.close()
+        sys.exit(1)
 
     regions = {}
     contigDetails = dxpy.DXRecord(originalContig).get_details()['contigs']
@@ -143,7 +146,14 @@ def main():
                 print "Processed count %i variants " % count
             if input[0] != "#":
                 vcfLine = parseVcfLine(input)
-                regionIndex = checkWithinRegion(vcfLine['chr'], vcfLine['lo'], vcfLine['hi'], regions)
+                try:
+                    regionIndex = checkWithinRegion(vcfLine['chr'], vcfLine['lo'], vcfLine['hi'], regions)
+                except KeyError:
+                        errorFile = open("AppError.txt", 'w')
+                        errorFile.write("There was a mismatch between the reference genome provided and a variant entry. For example:\n" + line)
+                        errorFile.close()
+                        sys.exit(1)
+
                 if regionIndex > -1:         
                     if lastRegion[0] != vcfLine['chr'] or lastRegion[1] != regionIndex:
                         lastRegion[0] = vcfLine['chr']
