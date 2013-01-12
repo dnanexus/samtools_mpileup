@@ -85,8 +85,8 @@ def main(**job_inputs):
     #  details['filters'] = headerInfo['filters']
     variants.set_details(details)
 
-    if 'output name' in job_inputs:
-        variants.rename(job_inputs['output name'])
+    if 'output_name' in job_inputs:
+        variants.rename(job_inputs['output_name'])
     else:
         variants.rename(mappingsTable.describe()['name'] + " variant calls by Samtools mpileup")
 

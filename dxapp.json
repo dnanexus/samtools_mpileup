@@ -7,7 +7,7 @@
   "inputSpec": [
     {"name": "mappings", "class": "gtable", "label":"Mappings Object", "help":"The mapped reads which will be used to call variants from", "type": "LetterMappings"},
     {"name": "reference", "class": "record", "label":"Reference Genome", "help":"The reference genome to call variants against", "type": "ContigSet"},
-    {"name": "output name", "class": "string", "label":"Output Name", "help": "The name of the generated variants object", "optional": true},
+    {"name": "output_name", "class": "string", "label":"Output Name", "help": "The name of the generated variants object", "optional": true},
     {"name": "reads_per_job", "class": "int", "label": "Reads per Job", "help": "Controls the degree of parallelism. The number of jobs created to run the program will be the total number of reads divided by this", "default": 25000000},
 
     {"name": "disable_probabilistic_realignment", "label":"No Realignment", "help":"When this option is selection mpileup will not attempt to realign potentially misaligned reads. Turning this off will increase the false positive rate", "class": "boolean", "default": false},
