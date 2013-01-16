@@ -131,7 +131,7 @@ def main(**job_inputs):
 @dxpy.entry_point('map')
 def mapPileup(**job_inputs):
     print "Downloading Reference Genome"
-    subprocess.check_call("contigset2fasta %s ref.fa" % (job_inputs['original_contig_set']), shell=True)
+    subprocess.check_call("dx-contigset-to-fasta %s ref.fa" % (job_inputs['original_contig_set']), shell=True)
 
     #The mappings-to-sam script takes a file with a list of regions in the form -L chrX:lo-hi, as produced by the genome splitting region.
     #This generates the file
