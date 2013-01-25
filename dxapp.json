@@ -1,8 +1,8 @@
 {
   "name": "samtools_mpileup",
-  "title": "Samtools Pileup",
-  "summary": "Variant calling for SNPs and Indels using Samtools Pileup",
-  "description": "Samtools pileup takes a set of mapped reads and calls SNP and indels variations from a reference genome, using the mpileup option of samtools.",
+  "title": "SAMtools mpileup",
+  "summary": "Variant calling for SNPs and Indels using SAMtools mpileup",
+  "description": "SAMtools mpileup takes a set of mapped reads and calls SNP and indels variations from a reference genome, using the mpileup option of SAMtools.",
   "dxapi": "1.0.0",
   "inputSpec": [
     {"name": "mappings", "class": "gtable", "label":"Mappings Object", "help":"The mapped reads which will be used to call variants from", "type": "LetterMappings"},
@@ -53,7 +53,7 @@
                    "intervals_to_process",
                    "intervals_to_exclude"
                    ]},
-  "version": "0.1.2",
+  "version": "0.1.3",
   "categories": ["Variation calling"],
   "details":{
     "upstreamAuthors": "Heng Li, Bob Handsaker, Alec Wysoker, Tim Fennell, Jue Ruan, Nils Homer, Gabor Marth, Goncalo Abecasis, Richard Durbin, and 1000 Genome Project Data Processing Subgroup",
