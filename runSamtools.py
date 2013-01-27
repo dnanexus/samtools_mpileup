@@ -1,4 +1,28 @@
 #!/usr/bin/env python
+#
+# Copyright (C) 2013 DNAnexus, Inc.
+#
+# This file is part of samtools_mpileup (DNAnexus platform app).
+#
+# (The MIT Expat License)
+#
+#   Permission is hereby granted, free of charge, to any person obtaining a
+#   copy of this software and associated documentation files (the "Software"),
+#   to deal in the Software without restriction, including without limitation
+#   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#   and/or sell copies of the Software, and to permit persons to whom the
+#   Software is furnished to do so, subject to the following conditions:
+#
+#   The above copyright notice and this permission notice shall be included in
+#   all copies or substantial portions of the Software.
+#
+#   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#   DEALINGS IN THE SOFTWARE.
 
 import dxpy
 import subprocess, logging
@@ -13,7 +37,7 @@ def main(**job_inputs):
     job_outputs = {}
     mappingsTable = dxpy.open_dxgtable(job_inputs['mappings']['$dnanexus_link'])
     mappingsTableId = mappingsTable.get_id()
-    
+
     #This controls the degree of parallelism
     chunks = int(mappingsTable.describe()['length']/job_inputs['reads_per_job'])+1
 
@@ -26,9 +50,9 @@ def main(**job_inputs):
 
     #In the next major section of code, we construct a variants table. As regions of the genome are passed to each worker
     #and variants are called on them, the workers will add rows to this table concurrently.
-    
+
     variants_schema = [
-        {"name": "chr", "type": "string"}, 
+        {"name": "chr", "type": "string"},
         {"name": "lo", "type": "int32"},
         {"name": "hi", "type": "int32"},
         {"name": "ref", "type": "string"},
@@ -39,7 +63,7 @@ def main(**job_inputs):
 
     #The information in these tags is elevated into specific columns, so additional columns for these tags will not be created
     elevatedTags = ['format_GT', 'format_DP', 'format_AD']
-    
+
     #The info and format tags are extracted from the header printed by samtools
     #If additional code will add a tag to the output of the program, modify this header to include the tag.
     #TODO: Allow the table to be created by the first job that finishes to avoid this step.
@@ -48,12 +72,12 @@ def main(**job_inputs):
     samples = []
 
     indices = [dxpy.DXGTable.genomic_range_index("chr","lo","hi", 'gri')]
-    
+
     ##The following section creates the sample-specific table columns
     for k, v in headerInfo['tags']['info'].iteritems():
         variants_schema.append({"name": "info_"+k, "type":translateTagTypeToColumnType(v)})
         description[k] = {'name' : k, 'description' : v['description'], 'type' : v['type'], 'number' : v['number']}
-    
+
     #For each sample, add the sample-specific columns to the schema, at present only one sample is supported
     numSamples = 1
     for i in range(numSamples):
@@ -74,12 +98,12 @@ def main(**job_inputs):
 
     #TODO: Add lexicographic indices when secondary indices are supported
 
-    
+
     variants = dxpy.new_dxgtable(variants_schema, indices=[dxpy.DXGTable.genomic_range_index("chr", "lo", "hi", "gri")])
     tableId = variants.get_id()
     variants = dxpy.open_dxgtable(tableId)
     variants.add_types(["Variants", "gri"])
-    
+
     details = {'samples':samples, 'original_contigset':job_inputs['reference'], 'original_mappings':job_inputs['mappings'], 'formats':headerInfo['tags']['format'], 'infos':headerInfo['tags']['info']}
     #if headerInfo.get('filters') != {}:
     #  details['filters'] = headerInfo['filters']
@@ -119,13 +143,13 @@ def main(**job_inputs):
             reduce_job_inputs["mapJob" + str(i) + "TableId"] = {'job': map_job.get_id(), 'field': 'ok'}
 
     reduce_job_inputs['tableId'] = tableId
-    
+
     #Run a "reduce" job, which only begins once all of the map jobs singal they have completed by sending 'ok':True
     #The reduce job closes the table. This step is explicitly needed because table closing must wait till the completion of the map jobs
     #By giving the reduce job the map jobs as input, the reduce job will wait to start.
     reduce_job = dxpy.new_dxjob(reduce_job_inputs, "reduce")
     job_outputs = {'variants': {'job': reduce_job.get_id(), 'field': 'variants'}}
-    
+
     return job_outputs
 
 @dxpy.entry_point('map')
@@ -155,7 +179,7 @@ def mapPileup(**job_inputs):
 
         variants = dxpy.open_dxgtable(job_inputs['tableId'])
         command = "samtools mpileup -uf ref.fa"
-        
+
         #Since samtools takes a bed file to specify the regions, this takes the interval from the -L chrX:lo-hi format and puts it into BED
         bedFile = open("regions.bed", 'w')
         intervalMatch = re.findall("-L ([^:]*):(\d+)-(\d+)", job_inputs['interval'])
@@ -170,7 +194,7 @@ def mapPileup(**job_inputs):
         command += " input.bam | bcftools view "
         command += job_inputs['bcf_options']
         command += " - > output.vcf"
-        
+
         print "Pileup Command: " + command
         subprocess.check_call(command ,shell=True)
 
@@ -185,11 +209,11 @@ def mapPileup(**job_inputs):
 
         print "Import variants command: " + command
         subprocess.check_call(command ,shell=True)
-    
+
     #Return 'ok', a signal which the reduce job looks for in order to know when it can begin closing the table
     job_outputs = {'ok':True}
     return job_outputs
-        
+
 @dxpy.entry_point('reduce')
 def reducePileup(**job_inputs):
     t = dxpy.open_dxgtable(job_inputs['tableId'])
@@ -197,7 +221,7 @@ def reducePileup(**job_inputs):
     t.close()
     job_outputs = {'variants': dxpy.dxlink(t.get_id())}
     return job_outputs
-    
+
 def makeSamtoolsParameters(**job_inputs):
     #Always output genotypes
     options = '-u'
@@ -246,7 +270,7 @@ def extractHeader(vcfFileName, elevatedTags):
             tagType = 'info'
           elif line.count("FILTER") > 0:
             result['filters'][re.findall("ID=(\w+),")[0]] = re.findall('Description="(.*)"')[0]
-      
+
           typ = re.findall("Type=(\w+),", line)
           if tagType != '':
             number = re.findall("Number=(\w+)", line)
@@ -268,7 +292,7 @@ def splitGenomeLengthLargePieces(contig_set, chunks):
     sizes = details['contigs']['sizes']
     names = details['contigs']['names']
     offsets = details['contigs']['offsets']
-    
+
     for i in range(len(names)):
         print names[i]+":"+str(sizes[i])
 

@@ -1,4 +1,28 @@
 #!/usr/bin/env python
+#
+# Copyright (C) 2013 DNAnexus, Inc.
+#
+# This file is part of samtools_mpileup (DNAnexus platform app).
+#
+# (The MIT Expat License)
+#
+#   Permission is hereby granted, free of charge, to any person obtaining a
+#   copy of this software and associated documentation files (the "Software"),
+#   to deal in the Software without restriction, including without limitation
+#   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#   and/or sell copies of the Software, and to permit persons to whom the
+#   Software is furnished to do so, subject to the following conditions:
+#
+#   The above copyright notice and this permission notice shall be included in
+#   all copies or substantial portions of the Software.
+#
+#   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#   DEALINGS IN THE SOFTWARE.
 
 import dxpy
 import math
@@ -33,33 +57,33 @@ def main():
     parser.add_option("--encoding", dest="encoding", default="utf8", help="Encoding of the imported file")
 
     (opts, args) = parser.parse_args()
-    
+
     variantsTable = dxpy.open_dxgtable(opts.variants_id)
     priors = {'chr':'', 'position':-1}
-    
+
     global elevatedTags
     elevatedTags = ['format_GT', 'format_DP', 'format_AD']
     global elevatedDefaults
     elevatedDefaults = {'format_GT' : './.','format_DP' : 0, 'format_AD' :''}
-    
+
     global samples
     samples = variantsTable.get_details()['samples']
-        
+
     vcfFileName = opts.file_name
     inferNoCall = opts.infer_no_call
     compressNoCall = opts.compress_no_call
     compressReference = opts.compress_reference
     encoding = opts.encoding
-    
+
     global tags
     tags = variantsTable.describe()['columns']
-    
+
     global typeCheck
     typeCheck = []
     for x in tags:
         typeCheck.append(x['type'])
-    
-    
+
+
     global tagDefaults
     tagDefaults = {}
     global tagOrder
@@ -103,13 +127,13 @@ def main():
     contigDetails = dxpy.DXRecord(originalContig).get_details()['contigs']
     contigNames = contigDetails['names']
     contigSizes = contigDetails['sizes']
-    
+
     global filtersPresent
     if variantsTable.get_details().get('filters') == None:
         filtersPresent = False
     else:
         filtersPresent = True
-    
+
     if opts.region_file != "":
         regionText = open(opts.region_file, 'r').read()
         intervalMatch = re.findall("-L ([^:]*):(\d+)-(\d+)", regionText)
@@ -124,18 +148,18 @@ def main():
     else:
         for i in range(len(contigNames)):
             regions[contigNames[i]] = [[0, contigSizes[i]-1]]
-    
+
     highestObservedInRegion = {}
     for x in regions:
         highestObservedInRegion[x] = []
         for y in regions[x]:
             highestObservedInRegion[x].append(y[0])
-                
+
     lastRegion = ['', -1]
-        
+
     header = ''
     vcfFile = codecs.open(vcfFileName, 'r', encoding=encoding)
-    #vcfFile = open(vcfFileName, 'r')       
+    #vcfFile = open(vcfFileName, 'r')
     #with unpack_and_open(vcfFileName) as vcfFile:
     #for input in open(vcfFileName, 'r'):
     try:
@@ -154,7 +178,7 @@ def main():
                         errorFile.close()
                         sys.exit(1)
 
-                if regionIndex > -1:         
+                if regionIndex > -1:
                     if lastRegion[0] != vcfLine['chr'] or lastRegion[1] != regionIndex:
                         lastRegion[0] = vcfLine['chr']
                         lastRegion[1] = regionIndex
@@ -178,7 +202,7 @@ def main():
         errorFile.write("Could not parse some characters in the file, please check the encoding of the file, perhaps it is not "+encoding)
         errorFile.close()
         sys.exit(1)
-    
+
     if inferNoCall:
         for chr, reg in highestObservedInRegion.iteritems():
             for i in range(len(reg)):
@@ -193,14 +217,14 @@ def checkWithinRegion(chr, lo, hi, regions):
         if (lo >= x[0] and lo <= x[1]) or (hi >= x[0] and hi <= x[1]):
             return regions[chr].index(x)
     return -1
-        
+
 def writeReferenceRow(variantsTable, vcfLine, compressReference, refBuffer, tagOrder, tagDefaults):
     #Always write the reference row if we are not compressing
     if compressReference == False:
         writeReferenceRowData(variantsTable, vcfLine, False, refBuffer, tagOrder, tagDefaults)
     else:
         writeReferenceRowData(variantsTable, vcfLine, True, refBuffer, tagOrder, tagDefaults)
-     
+
 
 def parseVcfLine(input):
     tabSplit = input.strip().split("\t")
@@ -210,7 +234,7 @@ def parseVcfLine(input):
     if ids == '.':
         ids = ''
     ref = tabSplit[3].replace(".","")
-    
+
     #In VCF format, the prior character to a sequence change is given in some cases (Ins, Del)
     #   we are removing this in our format, and so need to figure out which characters to filter
     altOptions = []
@@ -219,7 +243,7 @@ def parseVcfLine(input):
     filt = tabSplit[6]
     if filt == '.':
         filt = ''
-    
+
     overlap = checkOverlap(ref, altOptions)
 
     #print "here"
@@ -232,10 +256,10 @@ def parseVcfLine(input):
     hi = lo + len(ref)
     if altOptions == ['']:
         ref = ''
-    
+
     for i in range(len(altOptions)):
         altOptions[i] = altOptions[i][overlap:]
-    
+
     if qual == "." or qual == '':
         qual = 0.0
     else:
@@ -245,11 +269,11 @@ def parseVcfLine(input):
     formatColumn = ''
     if len(tabSplit) > 8:
         formatColumn = tabSplit[8]
-    
+
     formatData = []
     for x in tabSplit[9:]:
         formatData.append(x)
-    
+
     return {'chr':chr, 'lo':lo, 'hi':hi, 'ref':ref, 'filt':filt, 'ids':ids, 'tabSplit':tabSplit, 'altOptions':altOptions, 'qual':qual, 'formatColumn':formatColumn, 'infoColumn':infoColumn, 'formatData':formatData}
 
 def extractInfoTags(infoData):
@@ -284,7 +308,7 @@ def checkOverlap(ref, altOptions):
                 if len(x) != len(ref):
                     indelObserved = 1
     return indelObserved
-    
+
 def isSubSequence(longer, shorter):
     if len(shorter) == 0:
         return True
@@ -309,7 +333,7 @@ def getInfoField(fieldName, infoColumn, infoContents):
                 if len(entrySplitInfo) > position:
                     return entrySplitInfo[position]
     return False
-    
+
 def applyHeaderInformation(variantsTable, header):
     details = variantsTable.get_details()
     if details.get('header') == None:
@@ -324,7 +348,7 @@ def generateEmptyList(columns):
 
 def findCoveragePerAllele(line):
     result = ''
-    fraction = re.findall("AF=(.*?);", line)    
+    fraction = re.findall("AF=(.*?);", line)
     coverage = int(re.findall("DP=(\d+)", text)[0])
     for x in fraction.split(","):
         if len(result) > 0:
@@ -346,7 +370,7 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
     tabSplit = line['tabSplit']
     filt = line['filt']
     ids = line['ids']
-    
+
     allNoCall = True
     allRef = True
 
@@ -363,14 +387,14 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
                     formatTags[i][x] = elevatedDefaults[x]
                 else:
                     formatTags[i][x] = tagDefaults[x]
-                    
+
     alt = ''
     for x in altOptions:
         if altOptions.index(x) > 0:
             alt += ","
         alt += x.upper()
 
-    entry = [chr, lo, hi, ref, alt, qual, ids]    
+    entry = [chr, lo, hi, ref, alt, qual, ids]
     if filtersPresent:
         entry.append(filt)
     entry.extend(appendTags(tagOrder['info'], infoTags))
@@ -382,29 +406,29 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
         phased = False
         if formatTags[i]['format_GT'].count("|") > 0:
             phased = True
-        
+
         genotypeSplit = re.split("[\|\/]", formatTags[i]['format_GT'])
-                
+
         phasing = {}
-        
+
         if len(re.split("[\|\/]", formatTags[i]['format_GT'])) == len(re.split("[\|]", formatTags[i]['format_GT'])) and len(re.split("[\|\/]", formatTags[i]['format_GT'])) > 0 and '.' not in genotypeSplit:
             for j in range(len(genotypeSplit)):
                 if phasing.get(int(genotypeSplit[j])) == None:
                     phasing[int(genotypeSplit[j])] = [j]
                 else:
                     phasing[int(genotypeSplit[j])].append(j)
-            
+
         if '.' not in genotypeSplit:
             for j in range(len(genotypeSplit)):
                 genotypeSplit[j] = int(genotypeSplit[j])
             genotypeSplit.sort()
-        
+
         homozygous = True
         if len(genotypeSplit) > 0:
             for x in genotypeSplit:
                 if x != genotypeSplit[0]:
                     homozygous = False
-        
+
         phasedField = ''
         allelePos = 0
         for x in genotypeSplit:
@@ -417,10 +441,10 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
                 phasing[x].pop(0)
             allelePos += 1
         phasedField = phasedField.rstrip('/')
-    
+
         sampleVariantQuality = dxpy.NULL
         sampleGenotypeQuality = dxpy.NULL
-        
+
         if formatTags[i].get("format_PL") != None:
             sampleVariantQuality = 0.0
             sampleGenotypeQuality = 0.0
@@ -428,7 +452,7 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
             for j in range(genotypeSplit[1]):
                 genotypePosition += j
             genotypePosition += genotypeSplit[0] + 1
-            
+
             phredProbabilities = formatTags[i]["format_PL"].split(",")
             for j in range(len(phredProbabilities)):
                 if j != genotypePosition:
@@ -441,7 +465,7 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
                 sampleGenotypeQuality = -10.0*float(math.log10(sampleGenotypeQuality))
             except:
                 sampleGenotypeQuality = dxpy.NULL
-        
+
         if sampleGenotypeQuality < 0.0:
             sampleGenotypeQuality = 0.0
         if sampleVariantQuality < 0.0:
@@ -455,13 +479,13 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
                     type = 'ref'
                 else:
                     typeList.append(calculateVariantType(ref, altOptions[int(x)-1]))
-        
+
         typeList = list(set(typeList))
         if len(typeList) == 1:
             type = typeList[0]
         elif len(typeList) > 1:
             type = 'mixed'
-            
+
         if type != 'ref':
             allRef = False
         if type != 'no-call':
@@ -493,7 +517,7 @@ def writeRow(variantsTable, line, compressReference, compressNoCall, refBuffer):
         #print entry
         variantsTable.add_rows([entry[:]])
         return "write ref buffer"
-        
+
 def checkLeftPhasing(phased, position):
     if position > 0 and len(phased) > 0:
         if phased[position-1]:
@@ -527,12 +551,12 @@ def writeCompressedRow(variantsTable, chr, lo, hi, typ):
 
 def writeNoCallRow(variantsTable, chr, lo, hi, tagOrder, tagDefaults):
     entry = [chr, lo, hi, "", ""]
-    entry.extend(appendTags(tagOrder['info']), {}, elevatedTags )        
+    entry.extend(appendTags(tagOrder['info']), {}, elevatedTags )
     for i in samples:
         entry.extend(["", "no-call", 0, 0, '', 0, False])
         entry.extend(appendTags(tagOrder['format'], {}))
     variantsTable.add_rows([entry[:]])
-    
+
 def writeReferenceBuffer(variantsTable, refBuffer):
     row = []
     for x in refBuffer[:]:
@@ -596,7 +620,7 @@ def unpack_and_open(input):
         raise dxpy.ProgramError("Found a tar archive after decompression.  Please untar your sequences before importing")
     elif uncomp_type != 'ASCII text':
         raise dxpy.ProgramError("After decompression found file type other than plain text")
-    
+
     try:
         return subprocess.Popen([uncomp_util, input], stdout=subprocess.PIPE).stdout
     except:
@@ -612,7 +636,7 @@ def findType(entry):
     return "string"
 
 def checkEntry(entry, typeCheck):
-    
+
     for i in range(len(typeCheck)):
         if isinstance(entry[i], float):
             if typeCheck[i] != 'double':
@@ -631,7 +655,7 @@ def checkEntry(entry, typeCheck):
                 print str(i) + " entry, expected "+typeCheck[i]+", got " + str(entry[i])
                 print entry
     return
-            
+
 
 
 def appendTags(order, tags):
@@ -666,5 +690,5 @@ def calculateVariantType(ref, alt):
     elif len(alt) < len(ref) and isSubSequence(ref, alt):
         return "del"
     return "complex"
-    
+
 main()
