@@ -33,8 +33,12 @@
   "outputSpec": [
     {"name": "variants", "class": "gtable", "type": {"$and": ["Variants", "gri"]}}
   ],
-  "runSpec":
-    {"file": "runSamtools.py", "interpreter": "python2.7", "execDepends": [{"name": "perl"}]},
+  "runSpec": {
+    "file": "runSamtools.py",
+    "interpreter": "python2.7",
+    "execDepends": [{"name": "perl"}],
+    "buildDepends": [{"name": "libncurses5-dev"}]
+  },
 
   "openSource":true,
   "details":{ "advancedInputs": [

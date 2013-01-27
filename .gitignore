@@ -1,0 +1,9 @@
+samtools/*.o
+samtools/*.a
+samtools/samtools
+samtools/bcftools/*.o
+samtools/bcftools/*.a
+samtools/bcftools/bcftools
+resources/usr/bin/samtools
+resources/usr/bin/bcftools
+resources/usr/bin/vcfutils.pl
