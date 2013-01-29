@@ -2,7 +2,6 @@
   "name": "samtools_mpileup",
   "title": "SAMtools mpileup",
   "summary": "Variant calling for SNPs and Indels using SAMtools mpileup",
-  "description": "SAMtools mpileup takes a set of mapped reads and calls SNP and indels variations from a reference genome, using the mpileup option of SAMtools.",
   "dxapi": "1.0.0",
   "inputSpec": [
     {"name": "mappings", "class": "gtable", "label":"Mappings Object", "help":"The mapped reads which will be used to call variants from", "type": "LetterMappings"},
