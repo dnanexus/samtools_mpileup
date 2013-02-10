@@ -36,7 +36,6 @@ import time
 import logging
 import codecs
 
-sys.path.append('/usr/local/lib/')
 logging.basicConfig(level=logging.DEBUG)
 import magic
 
