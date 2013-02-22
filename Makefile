@@ -30,4 +30,6 @@ all:
 	cp -a samtools/bcftools/vcfutils.pl resources/usr/bin/vcfutils.pl
 
 clean:
+	$(MAKE) -C samtools clean
+	$(MAKE) -C samtools/bcftools clean
 	rm -f resources/usr/bin/samtools resources/usr/bin/bcftools resources/usr/bin/vcfutils.pl
