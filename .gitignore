@@ -1,3 +1,4 @@
+*.pyc
 samtools/*.o
 samtools/*.a
 samtools/samtools
