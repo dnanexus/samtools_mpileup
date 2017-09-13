@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>		
+		<title>Quality Report</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+		<style type="text/css">
+			ul {
+			  list-style-type: none;
+			}
+			.gitpic {
+				margin: 2px 5px 2px 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Quality Report</h1>
+			</br>
+			<h3>{{release_name}} Release Issues</h3>
+			<ul>
+				{% for issue in issues %}
+				<li>[<a href="{{ issue.permalink() }}">{{ issue.key }}</a>]: {{ issue.fields.summary }}</li>
+				{% endfor %}
+			</ul>
+			</br>
+			<h3>{{release_name}} Release Commits</h3>
+			</br>
+			<ul>
+				{% for GitHubCommit in commits %}
+				<li><a href="{{ GitHubCommit.link }}"><img class="gitpic" src="./GitHub-Mark.png"></a><a href="{{ GitHubCommit.origin_user_link }}">{{ GitHubCommit.origin_user }}</a> {{ GitHubCommit.message }}</li>
+				{% endfor %}
+			</ul>
+			</br>
+			<h3>{{release_name}} Release Test State</h3>
+			</br>
+			<ul>
+				{% for test in jenkins_tests %}
+				{% if test.recent_build_status %}
+				{% set jenkins_img = './jenkins_blue.png'%}
+				{% else %}
+				{% set jenkins_img = './jenkins_red.png'%}
+				{% endif %}
+				<li><a href="{{ test.recent_build_link }}"><img src="{{ jenkins_img }}" alt="{{ test.recent_build_status }}"></a><a href="{{ test.issue_obj.permalink() }}"> {{ test.issue_obj.key }}</a></li>
+				{% endfor %}
+			</ul>
+			</br>
+			<h3>Issue Changelog summary</h3>
+			</br>
+			{% for issue in issues %}
+			<h5><a href="{{ issue.permalink() }}">{{ issue.key }}</a>: {{ issue.fields.summary }}</h5>
+				<table class="table">
+					<thead class="thead-default">
+						<td>Field</td>
+						<td>Date</td> 
+						<td>Previous value</td>
+						<td>New value</td>
+						<td>Author</td>   
+					</thead>
+					{% for change in issue.subsethistory %}
+					<tr>
+						<td>{{ change.Field }}</td>
+						<td>{{ change.Date }}</td>
+						<td>{{ change.From }}</td>
+						<td>{{ change.To }}</td>
+						<td>{{ change.By }}</td>
+					</tr>
+					{% endfor %}
+				</table>
+			{% endfor %}
+		</div>
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+	</body>
+</html>

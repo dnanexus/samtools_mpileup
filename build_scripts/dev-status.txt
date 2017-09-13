@@ -1,0 +1,32 @@
+Dependencies:
+
+JIRA for python (pip install jira): http://skjira.readthedocs.io/en/latest/quickstart.html
+
+JIRA shell:
+jirashell -s https://dnanexus.jira.com -u <user> -p <pass>
+
+
+From JIRA GitHub request info:
+https://dnanexus.jira.com/rest/dev-status/1.0/issue/detail?issueId=69328&applicationType=github&dataType=repository&_=1504993842873
+
+# Working with JIRA versions:
+
+In [3]: jira.project_versions('SCI')
+Out[3]: 
+[<JIRA Version: name=u'Test_QMS', id=u'10920'>,
+ <JIRA Version: name=u'QMS_demo', id=u'10921'>]
+
+# JQL search for issues:
+
+jql_str = "project = Science AND fixVersion = QMS_demo"
+search_results = jira.search_issues(jql_str)
+
+# parse commits in issues
+{u'errors': [], u'detail': [{u'repositories': [], u'_instance': {u'name': u'GitHub', u'baseUrl': u'https://github.com', u'typeName': u'GitHub', u'singleInstance': True, u'type': u'github', u'id': u'github'}}]}
+
+
+/rest/dev-status/1.0/issue/detail?issueId=12345&applicationType=github&dataType=repository
+
+# Script to generate reports
+
+python generate_release_report.py https://dnanexus.jira.com 10921 -u sosazuwa@dnanexus.com -p <fill in> --overwrite
