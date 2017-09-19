@@ -1,0 +1,80 @@
+{
+  "name": "fastq_threshold_compare",
+  "title": "FASTQ genomic material thresholds comparison",
+  "summary": "This applet compares the contamination levels in a fastq file with the expected contamination level.",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "ori_fastq",
+      "label": "Original Fastq (Left Reads)",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "ori_fastq2",
+      "label": "Original Fastq (Right Reads)",
+      "class": "file",
+      "optional": true,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "new_fastq",
+      "label": "NewFastq (Left Reads)",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "new_fastq2",
+      "label": "New Fastq (Right Reads)",
+      "class": "file",
+      "optional": true,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "expected_filter_rate",
+      "label": "Expected % Reads filtered",
+      "class": "float",
+      "optional": false,
+      "help": ""
+    },
+    {
+      "name": "tolerance",
+      "label": "Filter % Tolerance Window",
+      "class": "float",
+      "optional": false,
+      "help": ""
+    }
+  ],
+  "outputSpec": [],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 2
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/fastq_threshold_compare.sh",
+    "systemRequirements": {
+      "*": {
+        "instanceType": "mem1_ssd1_x2"
+      }
+    },
+    "distribution": "Ubuntu",
+    "release": "14.04"
+  }
+}
