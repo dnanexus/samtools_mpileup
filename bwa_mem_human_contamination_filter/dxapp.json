@@ -1,0 +1,173 @@
+{
+  "name": "bwa_mem_contamination_filter",
+  "title": "bwa_mem_contamination_filter",
+  "summary": "Maps FASTQ reads (paired or unpaired) to a reference genome with the BWA-MEM algorithm and filter to get only low mappable reads",
+  "version": "0.0.1",
+  "inputSpec": [
+
+    {
+      "name": "reads_fastqgz",
+      "label": "Reads",
+      "help": "A file, in gzipped FASTQ format, with the reads to be mapped (or the left reads, for paired pairs).",
+      "class": "file",
+      "patterns": ["*.fq.gz", "*.fastq.gz"]
+    },
+    {
+      "name": "reads2_fastqgz",
+      "label": "Reads (right mates)",
+      "help": "(Optional) A file, in gzipped FASTQ format, with the right reads to be mapped (for paired reads).",
+      "class": "file",
+      "patterns": ["*.fq.gz", "*.fastq.gz"],
+      "optional": false
+    },
+    {
+      "name": "genomeindex_targz",
+      "label": "BWA reference genome index",
+      "help": "A file, in gzipped tar archive format, with the reference genome sequence already indexed with BWA.",
+      "class": "file",
+      "patterns": ["*.bwa-index.tar.gz"],
+      "suggestions": [
+        {
+          "name": "DNAnexus Reference Genomes",
+          "project": "project-BQpp3Y804Y0xbyG4GJPQ01xv",
+          "path": "/"
+        }
+      ]
+    },
+
+    {
+      "name": "add_read_group",
+      "label": "Add read group information to the mappings (required by downstream GATK)?",
+      "help": "Select this (and supply read group information), to add read group information to the output mappings. Certain read group information (id, sample, etc.) is required for downstream analysis by GATK. Selecting this will supply the '-R' option to 'bwa mem'.",
+      "class": "boolean",
+      "default": true,
+      "group": "Common"
+    },
+    {
+      "name": "read_group_id",
+      "label": "Read group id",
+      "help": "The read group identifier (RG ID tag) to add to the mappings. This must be a string (without spaces) uniquely identifying this dataset (instrument+run+lane) across all sequencing data in the world. (Downstream analysis by GATK will require this).",
+      "class": "string",
+      "default": {"$dnanexus_link": {"input": "reads_fastqgz", "metadata": "name"}},
+      "group": "Common"
+    },
+    {
+      "name": "read_group_platform",
+      "label": "Read group platform",
+      "help": "The read group platform (RG PL tag) to add to the mappings. Per the SAM spec, valid values are CAPILLARY, LS454, ILLUMINA, SOLID, HELICOS, IONTORRENT and PACBIO. (Downstream analysis by GATK does not currently use this, but was in the past. It may return in the future, so it's a good idea to properly populate this field).",
+      "class": "string",
+      "default": "ILLUMINA",
+      "choices": ["CAPILLARY", "LS454", "ILLUMINA", "SOLID", "HELICOS", "IONTORRENT", "PACBIO"],
+      "group": "Common"
+    },
+    {
+      "name": "read_group_platform_unit",
+      "label": "Read group platform unit",
+      "help": "The read group platform unit (RG PU tag) to add to the mappings. This is a string (without spaces), usually flowcell-barcode.lane for Illumina or slide for SOLiD. (Not currently used by GATK.)",
+      "class": "string",
+      "default": "None",
+      "group": "Common"
+    },
+    {
+      "name": "read_group_library",
+      "label": "Read group library",
+      "help": "The read group library (RG LB tag) to add to the mappings. This is a string (without spaces) identifying the sequencing library prep for this experiment. (Picard MarkDuplicates uses this field to determine which read groups might contain molecular duplicates, in case the same DNA library was sequenced on multiple lanes; not currently used by GATK).",
+      "class": "string",
+      "default": "1",
+      "group": "Common"
+    },
+    {
+      "name": "read_group_sample",
+      "label": "Read group sample",
+      "help": "The read group sample (RG SM tag) to add to the mappings. This must be a string (without spaces) uniquely identifying the biological sample being sequenced. (GATK treats all read groups with the same SM value as containing sequencing data for the same sample. Therefore it's critical that the SM field be correctly specified, especially when performing simultaneous multi-sample variation calling with the GATK UnifiedGenotyper module).",
+      "class": "string",
+      "default": "1",
+      "group": "Common"
+    },
+    {
+      "name": "all_alignments",
+      "label": "Output all alignments for single/unpaired reads?",
+      "help": "Select this to output all found alignments for single-end or unpaired paired-end reads. These alignments will be flagged as secondary alignments. This will supply the '-a' option to 'bwa mem'.",
+      "class": "boolean",
+      "optional": true,
+      "group": "Common"
+    },
+    {
+      "name": "mark_as_secondary",
+      "label": "Mark shorter split hits as secondary?",
+      "help": "If long reads are split among multiple locations in the genome (because different parts of the same read align to different locations), select this to mark the shorter ones as secondary alignments. This will ensure better compatibility with Picard and GATK, as some of these tools are not designed for multiple primary split alignments. This will supply the '-M' option to 'bwa mem'.",
+      "class": "boolean",
+      "optional": true,
+      "group": "Common",
+      "default": true
+    },
+    {
+      "name": "advanced_options",
+      "label": "Advanced command line options",
+      "help": "Advanced command line options that will be supplied directly to the 'bwa mem' execution. WARNING: if provided, these advanced options will be used INSTEAD of the common options. Example: -L 10 -R @RG\\\\tID:foo\\\\tSM:bar",
+      "class": "string",
+      "optional": true,
+      "group": "Advanced"
+    },
+    {
+      "name": "percent_identity",
+      "label": "Minimum percent identity of reads that want to remove",
+      "class": "int",
+      "optional": false,
+      "default": 90,
+      "group": "Advanced"
+    }
+
+
+  ],
+  "outputSpec": [
+    {
+      "name": "reads_out_fastqgz",
+      "label": "filtered forward read",
+      "help": "",
+      "class": "file",
+      "patterns": ["*.fastq.gz"]
+    },
+    {
+      "name": "reads2_out_fastqgz",
+      "label": "filtered reverse read",
+      "help": "",
+      "class": "file",
+      "patterns": ["*.fastq.gz"]
+    },
+    {
+      "name": "removal_list",
+      "label": "removal list",
+      "help": "",
+      "class": "file",
+      "patterns": ["*.txt"]
+    }
+  ],
+  "runSpec": {
+    "interpreter": "bash",
+    "file": "src/code.sh",
+    "systemRequirements": {
+      "main": {
+        "instanceType": "mem1_ssd1_x8"
+      }
+    }
+  },
+  "access": {
+    "project": "CONTRIBUTE",
+    "allProjects": "VIEW",
+    "network": [
+      "*"
+    ]
+  },
+  "categories": [
+    "Filtering"
+  ],
+  "details": {
+    "upstreamVersion": "0.7.12",
+    "upstreamAuthor": "Heng Li",
+    "upstreamUrl": "http://bio-bwa.sourceforge.net/",
+    "upstreamLicenses": ["GPLv3"],
+    "whatsNew": "* 1.5.0: Updated to bwa 0.7.12"
+  },
+  "openSource": true
+}
