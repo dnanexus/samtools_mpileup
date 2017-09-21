@@ -47,17 +47,24 @@
     },
     {
       "name": "expected_filter_rate",
-      "label": "Expected % Reads filtered",
-      "class": "float",
+      "label": "Expected % Reads remaining after filtering",
+      "class": "string",
       "optional": false,
       "help": ""
     },
     {
-      "name": "tolerance",
-      "label": "Filter % Tolerance Window",
-      "class": "float",
+      "name": "max_filter",
+      "label": "Filter Max",
+      "class": "string",
       "optional": false,
-      "help": ""
+      "help": "Highest percentage of reads post-filter before auto-fail."
+    },
+    {
+      "name": "tolerance",
+      "label": "Filter % Tolerance Window.",
+      "class": "string",
+      "optional": false,
+      "help": "Percentage will be used to create +/- window when comparing expected post-filter reads to pre-filter reads."
     }
   ],
   "outputSpec": [],
@@ -68,6 +75,7 @@
       }
     },
     "interpreter": "bash",
+    "assetDepends": [{"id": "record-F70z8v80Vky2F1926gJ4V389"}],
     "file": "src/fastq_threshold_compare.sh",
     "systemRequirements": {
       "*": {
